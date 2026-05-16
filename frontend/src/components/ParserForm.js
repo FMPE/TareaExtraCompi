@@ -5,12 +5,14 @@ import { Form, Button, Alert, Badge } from 'react-bootstrap';
 const PARSER_ENDPOINTS = {
   recursive_descent: '/api/parse/recursive-descent',
   ll1: '/api/parse/ll1',
+  lr0: '/api/parse/lr0',
   lr1: '/api/parse/lr1',
 };
 
 const PARSER_LABELS = {
   recursive_descent: { name: 'Descenso Recursivo', type: 'Top-Down', color: 'info' },
   ll1: { name: 'LL(1) Predictivo', type: 'Top-Down', color: 'info' },
+  lr0: { name: 'LR(0)', type: 'Bottom-Up', color: 'warning' },
   lr1: { name: 'LR(1)', type: 'Bottom-Up', color: 'warning' },
 };
 
@@ -82,6 +84,7 @@ const ParserForm = ({ onResult }) => {
             <option value="ll1">LL(1) Predictivo</option>
           </optgroup>
           <optgroup label="Bottom-Up">
+            <option value="lr0">LR(0)</option>
             <option value="lr1">LR(1)</option>
           </optgroup>
         </Form.Select>

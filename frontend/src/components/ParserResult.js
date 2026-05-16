@@ -11,6 +11,7 @@ const ParserResult = ({ result }) => {
   const parserNames = {
     recursive_descent: 'Descenso Recursivo',
     ll1: 'LL(1) Predictivo',
+    lr0: 'LR(0)',
     lr1: 'LR(1)',
   };
 
@@ -457,12 +458,88 @@ const ParserResult = ({ result }) => {
     </Accordion>
   );
 
+  // =====================================================================
+  // LR(0) specific renderers
+  // =====================================================================
+
+  const renderLR0Conflicts = () => {
+    if (!result.conflicts || result.conflicts.length === 0) return null;
+    return (
+      <div className="alert alert-warning fade-in">
+        <h6>⚠️ Conflictos detectados ({result.conflicts.length})</h6>
+        <ul className="mb-0">
+          {result.conflicts.map((c, i) => (
+            <li key={i}>
+              <Badge bg="danger" className="me-2">{c.kind}</Badge>
+              {c.message}
+            </li>
+          ))}
+        </ul>
+        <small className="text-muted">
+          La gramática no es LR(0). Se conserva la primera acción asignada en cada celda; los resultados del parsing pueden ser incorrectos.
+        </small>
+      </div>
+    );
+  };
+
+  const renderLR0Result = () => (
+    <Accordion defaultActiveKey="0" flush alwaysOpen className="mt-4">
+      <Accordion.Item eventKey="0">
+        <Accordion.Header>📄 Reglas de la gramática</Accordion.Header>
+        <Accordion.Body>{renderRules()}</Accordion.Body>
+      </Accordion.Item>
+
+      <Accordion.Item eventKey="1">
+        <Accordion.Header>📦 Tokens de entrada</Accordion.Header>
+        <Accordion.Body>{renderTokens()}</Accordion.Body>
+      </Accordion.Item>
+
+      {result.conflicts && result.conflicts.length > 0 && (
+        <Accordion.Item eventKey="conflicts">
+          <Accordion.Header>
+            ⚠️ Conflictos ({result.conflicts.length})
+          </Accordion.Header>
+          <Accordion.Body>{renderLR0Conflicts()}</Accordion.Body>
+        </Accordion.Item>
+      )}
+
+      <Accordion.Item eventKey="2">
+        <Accordion.Header>📍 Traza del análisis</Accordion.Header>
+        <Accordion.Body>{renderLR1TraceTable()}</Accordion.Body>
+      </Accordion.Item>
+
+      <Accordion.Item eventKey="3">
+        <Accordion.Header>⚙️ Tabla de Acción</Accordion.Header>
+        <Accordion.Body>{renderActionTable()}</Accordion.Body>
+      </Accordion.Item>
+
+      <Accordion.Item eventKey="4">
+        <Accordion.Header>🔁 Tabla GOTO</Accordion.Header>
+        <Accordion.Body>{renderGotoTable()}</Accordion.Body>
+      </Accordion.Item>
+
+      <Accordion.Item eventKey="5">
+        <Accordion.Header>📊 Autómata LR(0)</Accordion.Header>
+        <Accordion.Body>
+          <AutomatonViewer
+            states={result.states}
+            transitions={result.transitions}
+            actionTable={result.action_table}
+            gotoTable={result.goto_table}
+          />
+        </Accordion.Body>
+      </Accordion.Item>
+    </Accordion>
+  );
+
   const renderByParserType = () => {
     switch (parserType) {
       case 'll1':
         return renderLL1Result();
       case 'recursive_descent':
         return renderRDResult();
+      case 'lr0':
+        return renderLR0Result();
       case 'lr1':
       default:
         return renderLR1Result();

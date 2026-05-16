@@ -1,0 +1,441 @@
+     Universidad de Ingenier´ia y Tecnolog´ia
+
+Departamento de Ciencia de la Computacio´n
+
+                                 Compiladores
+
+                                    Puntos Extra E2
+                                            Profesor:
+
+                                      Julio Yarasca
+                                           Alumnos:
+
+                                      Franco Pacheco
+                                    Fernando Guillen
+
+                                 22 de octubre de 2025
+Compiladores  Extra E2  P´agina 1 de 6
+
+1. Introduccio´n
+
+    Este informe analiza la implementacio´n de un parser LR(1) desarrollado en Python.
+
+Caracter´isticas Principales
+
+       An´alisis bottom-up: Construye el ´arbol de derivacio´n desde las hojas hacia la ra´iz.
+
+       Lookahead de 1 s´imbolo: Utiliza un token de anticipaci´on para resolver conflictos.
+
+       Manejo de recursio´n izquierda: A diferencia de LL(1), puede procesar grama´ticas recursivas por
+       la izquierda.
+
+       Construccio´n de aut´omata: Genera estados LR(1) con ´items que incluyen informacio´n de lookahead.
+
+2. Arquitectura General
+
+Componentes Principales
+
+   1. Procesamiento de Gram´atica: Ana´lisis l´exico de reglas de producci´on.
+
+   2. C´alculo de FIRST: Determinacio´n de primeros s´imbolos terminales.
+   3. Construcci´on de ´Items LR(1): Generacio´n de estados del aut´omata.
+
+   4. Tablas de Parsing: Construccio´n de ACTION y GOTO.
+
+   5. Parser: Algoritmo shift-reduce.
+
+3. An´alisis Detallado del C´odigo
+
+3.1. Procesamiento de Gram´atica
+
+def process_grammar(lines):
+        grammar = {}
+       rules = []
+       for i, line in enumerate(lines):
+               left , right = line.split("->")
+               left = left.strip()
+               right = [sym.strip() for sym in right.strip().split()]
+               rules.append((i, left , right))
+               if left not in grammar:
+                       grammar[left] = []
+               grammar[left].append((i, right))
+        return grammar , rules
+
+Correctitud:
+       Indexaci´on consistente.
+
+       Estructura eficiente mediante diccionario.
+
+       Manejo correcto de espacios en blanco.
+
+3.2. Identificacio´n de S´imbolos
+
+def get_symbols(grammar):
+        non_terminals = list(grammar.keys())
+        terminals = set()
+       for productions in grammar.values():
+               for rule_num , prod in productions:
+                       for symbol in prod:
+                               if symbol not in grammar and symbol != " ":
+                                      terminals.add(symbol)
+        return non_terminals , list(terminals)
+Compiladores  Extra E2                                                    P´agina 2 de 6
+
+Correctitud:
+
+       Clasificacio´n correcta de s´imbolos.
+
+       Detecci´on precisa de terminales.
+
+       Manejo especial para epsilon.
+
+3.3. C´alculo de FIRST (Versio´n Mejorada)
+
+def compute_first(X, grammar):
+       if X in FIRST:
+               return FIRST[X]
+
+       FIRST[X] = set()
+
+       if X not in grammar:
+               FIRST[X] = {X} # terminal
+               return FIRST[X]
+
+       for rule_num , production in grammar[X]:
+               first_prod = compute_first_sequence(production , grammar)
+               FIRST[X] |= first_prod
+
+        return FIRST[X]
+
+Mejoras:
+
+       Prevencio´n de recursi´on infinita.
+
+       Uso de memoizaci´on.
+
+       Manejo correcto de terminales.
+
+3.4. Algoritmo FIRST para Secuencias
+
+def compute_first_sequence(sequence , grammar):
+       if not sequence:
+               return {" "}
+
+        result = set()
+       for symbol in sequence:
+
+               if symbol in FIRST:
+                       symbol_first = FIRST[symbol]
+
+               elif symbol not in grammar:
+                       symbol_first = {symbol} # terminal
+
+               else:
+                       symbol_first = compute_first(symbol , grammar)
+
+               result |= (symbol_first - {" "})
+               if " " not in symbol_first:
+
+                       break
+       else:
+
+               result.add(" ")
+        return result
+
+Correctitud:
+
+       Caso base con secuencia vac´ia.
+
+       Propagaci´on adecuada de epsilon.
+
+       Terminaci´on garantizada.
+Compiladores  Extra E2  P´agina 3 de 6
+
+3.5. Clase LRItem
+
+class LRItem:
+       def __init__(self , rule_num , lhs , rhs , dot_pos , lookahead):
+               self.rule_num = rule_num
+               self.lhs = lhs
+               self.rhs = rhs
+               self.dot_pos = dot_pos
+               self.lookahead = lookahead
+
+Correctitud:
+
+       Representaci´on completa de ´item LR(1).
+
+       Lookahead expl´icito.
+
+       M´etodos auxiliares implementados.
+
+3.6. Construcci´on del Closure
+
+def closure(items , grammar):
+        result = set(items)
+        changed = True
+       while changed:
+               changed = False
+               new_items = set()
+               for item in result:
+                       next_sym = item.next_symbol()
+                       if next_sym and next_sym in grammar:
+                               beta = item.rhs[item.dot_pos + 1:] + [item.lookahead]
+                               first_beta = compute_first_sequence(beta , grammar)
+                               for rule_num , production in grammar[next_sym]:
+                                      for lookahead in first_beta:
+                                              if lookahead != " ":
+                                                      new_item = LRItem(rule_num , next_sym , production , 0, lookahead)
+                                                      if new_item not in result:
+                                                              new_items.add(new_item)
+                                                              changed = True
+               result.update(new_items)
+
+        epsilon_items = set()
+       for item in result:
+
+               if item.rhs == [" "] and item.dot_pos == 0:
+                       epsilon_item = LRItem(item.rule_num , item.lhs , item.rhs , 1, item.lookahead)
+                       epsilon_items . add ( epsilon_item )
+
+        result.update(epsilon_items)
+
+        return result
+
+Correctitud:
+
+       Algoritmo de punto fijo.
+
+       C´alculo preciso de lookahead.
+
+       Manejo especial de epsilon.
+
+3.7. Funci´on GOTO
+
+def goto(items , symbol , grammar):
+        new_items = set()
+       for item in items:
+               if item.next_symbol() == symbol:
+                       new_items . add ( item . advance_dot () )
+        return closure(new_items , grammar)
+
+Correctitud:
+
+       Seleccio´n adecuada de ´items.
+Compiladores  Extra E2  Pa´gina 4 de 6
+
+       Avance correcto del punto.
+
+       Aplicaci´on de closure.
+
+3.8. Construcci´on del Auto´mata LR(1)
+
+def build_lr1_automaton(grammar , start_symbol):
+        augmented_start = start_symbol + "'"
+        start_item = LRItem(-1, augmented_start , [start_symbol], 0, "$")
+
+        states = []
+        state_map = {}
+        transitions = {}
+
+        initial_state = closure({start_item}, grammar)
+        states.append(initial_state)
+        state_map[frozenset(initial_state)] = 0
+
+       queue = [initial_state]
+        processed = set()
+
+       while queue:
+               current_state = queue.pop(0)
+               current_index = state_map[frozenset(current_state)]
+
+               if frozenset(current_state) in processed:
+                       continue
+
+               processed . add ( frozenset ( current_state ))
+
+               symbols = set()
+               for item in current_state:
+
+                       next_sym = item.next_symbol()
+                       if next_sym:
+
+                               symbols.add(next_sym)
+
+               for symbol in symbols:
+                       new_state = goto(current_state , symbol , grammar)
+                       if new_state:
+                               frozen_new_state = frozenset(new_state)
+                               if frozen_new_state not in state_map:
+                                      state_map[frozen_new_state] = len(states)
+                                      states.append(new_state)
+                                      queue.append(new_state)
+
+                               new_index = state_map[frozen_new_state]
+                               transitions[(current_index , symbol)] = new_index
+
+        return states , transitions
+
+Correctitud:
+
+       Grama´tica aumentada correctamente.
+
+       BFS completo sobre los estados.
+
+       Prevenci´on de duplicados con frozenset.
+
+3.9. Construcci´on de Tablas de Parsing
+
+def build_lr1_parsing_table(states , transitions , grammar , rules , terminals , non_terminals):
+        action = defaultdict(dict)
+       goto = defaultdict(dict)
+
+       for i, state in enumerate(states):
+               for item in state:
+                       if item.is_reducible():
+                               if item.lhs == non_terminals [0] + "'" and item.lookahead == "$":
+                                      action[i]["$"] = ("accept", None)
+                               elif item.rule_num >= 0:
+                                      if item.lookahead not in action[i]:
+Compiladores  Extra E2  P´agina 5 de 6
+
+                                              action[i][item.lookahead] = ("reduce", item.rule_num)
+                       else:
+
+                               next_sym = item.next_symbol()
+                               if next_sym and next_sym in terminals and (i, next_sym) in transitions:
+
+                                      next_state = transitions[(i, next_sym)]
+                                      if next_sym not in action[i]:
+
+                                              action[i][next_sym] = ("shift", next_state)
+
+               for nt in non_terminals:
+                       if (i, nt) in transitions:
+                               goto[i][nt] = transitions[(i, nt)]
+
+        return action , goto
+
+Correctitud:
+
+       Acciones SHIFT, REDUCE y ACCEPT correctas.
+
+       Construcci´on precisa de tabla GOTO.
+
+       Prevencio´n de conflictos.
+
+3.10. Parser
+
+def lr1_parse(input_string , action_table , goto_table , rules , start_symbol):
+       stack = [0] # State stack
+        input_list = list(input_string) + ["$"]
+       index = 0
+       trace = []
+
+       while True:
+               state = stack[-1]
+               current_token = input_list[index]
+
+               if state not in action_table or current_token not in action_table[state]:
+                       trace . append ({
+                               "stack": stack[:],
+                               "remaining_input": input_list[index:],
+                               "action": f"Error:noactionforstate{state}withtoken{current_token}",
+                               "type": "error"
+                       })
+                       return trace , False
+
+               action_type , action_value = action_table[state][current_token]
+
+               if action_type == "shift":
+                       stack.append(action_value)
+                       trace . append ({
+                               "stack": stack[:],
+                               "remaining_input": input_list[index:],
+                               "action": f"Shift{current_token},gotostate{action_value}",
+                               "type": "shift"
+                       })
+                       index += 1
+
+               elif action_type == "reduce":
+                       rule_num , lhs , rhs = rules[action_value]
+
+                       if rhs != [" "]:
+                               for _ in range(len(rhs)):
+                                      stack . pop ()
+
+                       new_state = stack[-1]
+                       if new_state in goto_table and lhs in goto_table[new_state]:
+
+                               stack . append ( goto_table [ new_state ][ lhs ])
+                               trace . append ({
+
+                                      "stack": stack[:],
+                                      "remaining_input": input_list[index:],
+                                      "action": f"Reducebyrule{rule_num }:{lhs}->{' '.join(rhs).replace('
+
+                                                  ','epsilon ')}",
+                                      "type": "reduce",
+Compiladores  Extra E2  Pa´gina 6 de 6
+
+                                      "rule_num": rule_num ,
+                                      "rule_lhs": lhs ,
+                                      "rule_rhs": rhs
+                               })
+                       else:
+                               trace . append ({
+                                      "stack": stack[:],
+                                      "remaining_input": input_list[index:],
+                                      "action": f"Error:noGOTOforstate{new_state}with{lhs}",
+                                      "type": "error"
+                               })
+                               return trace , False
+
+               elif action_type == "accept":
+                       trace . append ({
+                               "stack": stack[:],
+                               "remaining_input": input_list[index:],
+                               "action": "Accept",
+                               "type": "accept"
+                       })
+                       return trace , True
+
+               else:
+                       trace . append ({
+                               "stack": stack[:],
+                               "remaining_input": input_list[index:],
+                               "action": f"Error:unknownaction{action_type}",
+                               "type": "error"
+                       })
+                       return trace , False
+
+Correctitud:
+
+       Inicializacio´n correcta.
+
+       Acciones SHIFT y REDUCE implementadas correctamente.
+
+       Manejo de epsilon y errores.
+
+4. Verificaci´on de Correctitud
+
+4.1. Propiedades Te´oricas
+
+       C´alculo FIRST completo y finito.
+
+       Closure y GOTO implementan las definiciones formales.
+
+       Auto´mata LR(1) sin estados redundantes.
+
+       Tablas ACTION y GOTO sin conflictos.
+
+4.2. Casos L´imite Manejados
+
+       Grama´ticas con epsilon: Manejo especial de producciones vac´ias.
+
+       Recursio´n izquierda: Correcta construccio´n del auto´mata para gram´aticas recursivas.
+
+       Grama´ticas ambiguas: Deteccio´n impl´icita mediante conflictos en las tablas.
+
+       Entrada vac´ia: Manejo correcto del token $.
+
