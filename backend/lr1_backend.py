@@ -12,6 +12,7 @@ from lr1_parser import (
 )
 from recursive_descent_parser import recursive_descent_parse_from_text
 from ll1_parser import ll1_parse_from_text
+from lr0_parser import lr0_parse_from_text
 
 app = Flask(__name__)
 CORS(app)
@@ -127,6 +128,37 @@ def parse_recursive_descent():
 
 
 # ---------------------------------------------------------------------------
+# Parser LR(0)
+# ---------------------------------------------------------------------------
+
+@app.route('/api/parse/lr0', methods=['POST'])
+def parse_lr0():
+    try:
+        data = request.json
+        grammar_text = data.get('grammar', '')
+        input_text = data.get('input', '')
+
+        if not grammar_text or not input_text:
+            return jsonify({
+                'error': 'Both grammar and input are required',
+                'success': False
+            }), 400
+
+        result = lr0_parse_from_text(grammar_text, input_text)
+
+        if not result.get('success', False):
+            return jsonify(result), 400
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'success': False
+        }), 500
+
+
+# ---------------------------------------------------------------------------
 # Parser LL(1)
 # ---------------------------------------------------------------------------
 
@@ -181,6 +213,14 @@ def list_parsers():
             "supports_left_recursion": False,
         },
         {
+            "id": "lr0",
+            "name": "LR(0)",
+            "type": "bottom-up",
+            "endpoint": "/api/parse/lr0",
+            "description": "Parser LR(0). Sin lookahead — las reducciones aplican a todos los terminales. Útil para gramáticas simples; genera conflictos shift-reduce fácilmente.",
+            "supports_left_recursion": True,
+        },
+        {
             "id": "lr1",
             "name": "LR(1)",
             "type": "bottom-up",
@@ -204,7 +244,7 @@ def health_check():
     return jsonify({
         'status': 'OK',
         'message': 'Parser Backend is running',
-        'available_parsers': ['recursive_descent', 'll1', 'lr1']
+        'available_parsers': ['recursive_descent', 'll1', 'lr0', 'lr1']
     })
 
 
@@ -227,7 +267,21 @@ def get_examples():
             "grammar": "S -> a B\nS -> b A\nA -> a\nB -> b",
             "input": "a b",
             "description": "Gramática simple sin ambigüedades, apta para todos los parsers.",
-            "compatible_parsers": ["recursive_descent", "ll1", "lr1"]
+            "compatible_parsers": ["recursive_descent", "ll1", "lr0", "lr1"]
+        },
+        {
+            "name": "Concatenación Básica (LR(0))",
+            "grammar": "S -> A B\nA -> a\nB -> b",
+            "input": "a b",
+            "description": "Gramática mínima sin conflictos shift-reduce. Apta para LR(0) y todos los Bottom-Up.",
+            "compatible_parsers": ["lr0", "lr1"]
+        },
+        {
+            "name": "Conflicto Shift-Reduce (LR(0) falla)",
+            "grammar": "E -> E + T\nE -> T\nT -> T * F\nT -> F\nF -> ( E )\nF -> id",
+            "input": "id + id * id",
+            "description": "Gramática de expresiones con recursión izquierda. En LR(0) genera conflictos shift-reduce; LR(1) los resuelve con lookahead.",
+            "compatible_parsers": ["lr0", "lr1"]
         },
         {
             "name": "Lista con separador (LL(1))",
@@ -276,6 +330,7 @@ if __name__ == '__main__':
     print("API Endpoints:")
     print("  POST /api/parse                  - Parse (LR(1) default)")
     print("  POST /api/parse/lr1              - Parse with LR(1)")
+    print("  POST /api/parse/lr0              - Parse with LR(0)")
     print("  POST /api/parse/ll1              - Parse with LL(1)")
     print("  POST /api/parse/recursive-descent - Parse with Recursive Descent")
     print("  GET  /api/parsers                - List available parsers")
