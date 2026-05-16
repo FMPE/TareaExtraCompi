@@ -1,0 +1,42 @@
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Parse tree styles for Recursive Descent */
+.parse-tree-root {
+  list-style: none;
+  padding-left: 0;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.parse-tree-root ul.parse-tree-children {
+  list-style: none;
+  padding-left: 24px;
+  border-left: 2px solid #dee2e6;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.parse-tree-root li {
+  padding: 3px 0;
+  position: relative;
+}
+
+.parse-tree-root li::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 1px;
+  background: #dee2e6;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.parse-tree-root > li::before {
+  display: none;
+}

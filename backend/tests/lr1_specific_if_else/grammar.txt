@@ -1,0 +1,4 @@
+S -> if E then S else S
+S -> if E then S
+S -> other
+E -> id
