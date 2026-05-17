@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
 
 import grammar_common as gc
 from grammar_common import (
@@ -270,4 +271,5 @@ def get_examples():
 if __name__ == "__main__":
     print("Backend de parsers — API en http://localhost:5001")
     print("  POST /api/parse  body: { grammar, input, parser: lr0|slr1|lalr1|lr1|ll1|rd }")
-    app.run(debug=True, host="0.0.0.0", port=5001)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(debug=True, host="0.0.0.0", port=port)
