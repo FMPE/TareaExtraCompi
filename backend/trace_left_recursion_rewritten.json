@@ -1,0 +1,102 @@
+[
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "id",
+      "+",
+      "id",
+      "$"
+    ],
+    "action": "Shift id, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 3.",
+    "shifted": "id"
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "+",
+      "id",
+      "$"
+    ],
+    "action": "Reduce by rule 3: T -> id",
+    "type": "reduce",
+    "rule_num": 3,
+    "rule_lhs": "T",
+    "rule_rhs": [
+      "id"
+    ],
+    "explain": "Reducir con la regla 3: construir nodo \u00abT\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1,
+      6
+    ],
+    "remaining_input": [
+      "+",
+      "id",
+      "$"
+    ],
+    "action": "Shift +, goto state 6",
+    "type": "shift",
+    "explain": "Empujar terminal \u00ab+\u00bb y pasar al estado 6.",
+    "shifted": "+"
+  },
+  {
+    "stack": [
+      0,
+      1,
+      6,
+      3
+    ],
+    "remaining_input": [
+      "id",
+      "$"
+    ],
+    "action": "Shift id, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 3.",
+    "shifted": "id"
+  },
+  {
+    "stack": [
+      0,
+      1,
+      6,
+      7
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 3: T -> id",
+    "type": "reduce",
+    "rule_num": 3,
+    "rule_lhs": "T",
+    "rule_rhs": [
+      "id"
+    ],
+    "explain": "Reducir con la regla 3: construir nodo \u00abT\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1,
+      6,
+      7
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Accept",
+    "type": "accept",
+    "explain": "La entrada pertenece al lenguaje de la gram\u00e1tica."
+  }
+]

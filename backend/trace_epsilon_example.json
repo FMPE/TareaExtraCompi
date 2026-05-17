@@ -1,0 +1,120 @@
+[
+  {
+    "stack": [
+      0,
+      2
+    ],
+    "remaining_input": [
+      "b",
+      "b",
+      "$"
+    ],
+    "action": "Shift b, goto state 2",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abb\u00bb y pasar al estado 2.",
+    "shifted": "b"
+  },
+  {
+    "stack": [
+      0,
+      2,
+      8
+    ],
+    "remaining_input": [
+      "b",
+      "$"
+    ],
+    "action": "Reduce by rule 8: E -> epsilon",
+    "type": "reduce",
+    "rule_num": 8,
+    "rule_lhs": "E",
+    "rule_rhs": [
+      "\u03b5"
+    ],
+    "explain": "Reducir con la regla 8: construir nodo \u00abE\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      2,
+      4
+    ],
+    "remaining_input": [
+      "b",
+      "$"
+    ],
+    "action": "Reduce by rule 6: C -> E",
+    "type": "reduce",
+    "rule_num": 6,
+    "rule_lhs": "C",
+    "rule_rhs": [
+      "E"
+    ],
+    "explain": "Reducir con la regla 6: construir nodo \u00abC\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      2,
+      4,
+      13
+    ],
+    "remaining_input": [
+      "b",
+      "$"
+    ],
+    "action": "Shift b, goto state 13",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abb\u00bb y pasar al estado 13.",
+    "shifted": "b"
+  },
+  {
+    "stack": [
+      0,
+      2,
+      7
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 4: B -> C b",
+    "type": "reduce",
+    "rule_num": 4,
+    "rule_lhs": "B",
+    "rule_rhs": [
+      "C",
+      "b"
+    ],
+    "explain": "Reducir con la regla 4: construir nodo \u00abB\u00bb con 2 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 1: S -> b B",
+    "type": "reduce",
+    "rule_num": 1,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "b",
+      "B"
+    ],
+    "explain": "Reducir con la regla 1: construir nodo \u00abS\u00bb con 2 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Accept",
+    "type": "accept",
+    "explain": "La entrada pertenece al lenguaje de la gram\u00e1tica."
+  }
+]

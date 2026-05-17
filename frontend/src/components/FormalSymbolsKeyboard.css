@@ -1,0 +1,114 @@
+.formal-keyboard {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  transition: border-color var(--transition-fast);
+}
+
+.formal-keyboard.open {
+  border-color: var(--color-primary-100);
+}
+
+.formal-keyboard-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.formal-keyboard-toggle:hover {
+  background: var(--bg-subtle);
+}
+
+.formal-keyboard-toggle-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary-700);
+}
+[data-theme="dark"] .formal-keyboard-toggle-left { color: var(--color-primary-300); }
+
+.formal-keyboard-toggle-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+}
+
+.formal-keyboard-target { font-size: 0.78rem; }
+
+.formal-keyboard-body {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.formal-keyboard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: var(--space-2);
+}
+
+.formal-keyboard-tab {
+  padding: 0.32rem 0.7rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.formal-keyboard-tab:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.formal-keyboard-tab.active {
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+  border-color: var(--color-primary-100);
+}
+
+[data-theme="dark"] .formal-keyboard-tab.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--color-primary-300);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.formal-keyboard-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.formal-key-btn {
+  min-width: 2.4rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.formal-keyboard-hint {
+  margin: var(--space-3) 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.formal-keyboard-hint code {
+  font-size: 0.72rem;
+}

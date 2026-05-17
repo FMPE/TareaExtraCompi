@@ -1,0 +1,28 @@
+[
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "a",
+      "$"
+    ],
+    "action": "Shift a, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "shifted": "a"
+  },
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Error: no action for state 3 with token $",
+    "type": "error",
+    "explain": "No hay entrada en ACTION para este estado y lookahead."
+  }
+]

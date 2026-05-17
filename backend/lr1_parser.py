@@ -1,79 +1,15 @@
 import json
 from collections import defaultdict
 
-def load_grammar(path):
-    with open(path, "r", encoding='utf-8') as file:
-        lines = [line.strip() for line in file if line.strip()]
-    return lines
-
-def load_grammar_from_string(grammar_text):
-    lines = [line.strip() for line in grammar_text.split('\n') if line.strip()]
-    return lines
-
-def process_grammar(lines):
-    grammar = {}
-    rules = []
-    for i, line in enumerate(lines):
-        left, right = line.split("->")
-        left = left.strip()
-        right = [sym.strip() for sym in right.strip().split()]
-        rules.append((i, left, right))
-        if left not in grammar:
-            grammar[left] = []
-        grammar[left].append((i, right))
-    return grammar, rules
-
-def get_symbols(grammar):
-    non_terminals = list(grammar.keys())
-    terminals = set()
-    for productions in grammar.values():
-        for rule_num, prod in productions:
-            for symbol in prod:
-                if symbol not in grammar and symbol != "ε":
-                    terminals.add(symbol)
-    return non_terminals, list(terminals)
-
-FIRST = {}
-
-def compute_first(X, grammar):
-    if X in FIRST:
-        return FIRST[X]
-    
-    FIRST[X] = set()
-    
-    if X not in grammar:
-        FIRST[X] = {X}
-        return FIRST[X]
-    
-    for rule_num, production in grammar[X]:
-        first_prod = compute_first_sequence(production, grammar)
-        FIRST[X] |= first_prod
-    
-    return FIRST[X]
-
-def compute_first_sequence(sequence, grammar):
-    if not sequence:
-        return {"ε"}
-    
-    result = set()
-    for symbol in sequence:
-        if symbol in FIRST:
-            symbol_first = FIRST[symbol]
-        elif symbol not in grammar:
-            symbol_first = {symbol}
-        else:
-            symbol_first = compute_first(symbol, grammar)
-        
-        result |= (symbol_first - {"ε"})
-        if "ε" not in symbol_first:
-            break
-    else:
-        result.add("ε")
-    return result
-
-def clear_first_cache():
-    global FIRST
-    FIRST = {}
+from grammar_common import (
+    load_grammar,
+    load_grammar_from_string,
+    process_grammar,
+    get_symbols,
+    compute_first,
+    compute_first_sequence,
+    clear_first_cache,
+)
 
 class LRItem:
     def __init__(self, rule_num, lhs, rhs, dot_pos, lookahead):
@@ -225,81 +161,120 @@ def build_lr1_parsing_table(states, transitions, grammar, rules, terminals, non_
     return action, goto
 
 def lr1_parse(input_string, action_table, goto_table, rules, start_symbol):
+    """Devuelve (traza, válido, árbol).
+
+    El árbol es un dict anidado {kind, label, children?, rule_num?} o None si falla.
+    """
     stack = [0]
+    val_stack = []
     input_list = list(input_string) + ["$"]
     index = 0
     trace = []
-    
+
     while True:
         state = stack[-1]
         current_token = input_list[index]
-        
+
         if state not in action_table or current_token not in action_table[state]:
-            trace.append({
-                "stack": stack[:],
-                "remaining_input": input_list[index:],
-                "action": f"Error: no action for state {state} with token {current_token}",
-                "type": "error"
-            })
-            return trace, False
-        
+            trace.append(
+                {
+                    "stack": stack[:],
+                    "remaining_input": input_list[index:],
+                    "action": f"Error: no action for state {state} with token {current_token}",
+                    "type": "error",
+                    "explain": "No hay entrada en ACTION para este estado y lookahead.",
+                }
+            )
+            return trace, False, None
+
         action_type, action_value = action_table[state][current_token]
-        
+
         if action_type == "shift":
             stack.append(action_value)
-            trace.append({
-                "stack": stack[:],
-                "remaining_input": input_list[index:],
-                "action": f"Shift {current_token}, goto state {action_value}",
-                "type": "shift"
-            })
+            trace.append(
+                {
+                    "stack": stack[:],
+                    "remaining_input": input_list[index:],
+                    "action": f"Shift {current_token}, goto state {action_value}",
+                    "type": "shift",
+                    "explain": f"Empujar terminal «{current_token}» y pasar al estado {action_value}.",
+                    "shifted": current_token,
+                }
+            )
+            val_stack.append(
+                {"kind": "terminal", "label": current_token, "lexeme": current_token}
+            )
             index += 1
-        
+
         elif action_type == "reduce":
             rule_num, lhs, rhs = rules[action_value]
-            
-            if rhs != ["ε"]:
+
+            children = []
+            if rhs == ["ε"]:
+                children = [{"kind": "epsilon", "label": "ε"}]
+            else:
                 for _ in range(len(rhs)):
                     stack.pop()
-            
+                    children.insert(0, val_stack.pop())
+
             new_state = stack[-1]
             if new_state in goto_table and lhs in goto_table[new_state]:
                 stack.append(goto_table[new_state][lhs])
-                trace.append({
-                    "stack": stack[:],
-                    "remaining_input": input_list[index:],
-                    "action": f"Reduce by rule {rule_num}: {lhs} -> {' '.join(rhs).replace('ε', 'epsilon')}",
-                    "type": "reduce",
+                node = {
+                    "kind": "nonterminal",
+                    "label": lhs,
                     "rule_num": rule_num,
-                    "rule_lhs": lhs,
-                    "rule_rhs": rhs
-                })
+                    "children": children,
+                }
+                val_stack.append(node)
+                trace.append(
+                    {
+                        "stack": stack[:],
+                        "remaining_input": input_list[index:],
+                        "action": f"Reduce by rule {rule_num}: {lhs} -> {' '.join(rhs).replace('ε', 'epsilon')}",
+                        "type": "reduce",
+                        "rule_num": rule_num,
+                        "rule_lhs": lhs,
+                        "rule_rhs": rhs,
+                        "explain": f"Reducir con la regla {rule_num}: construir nodo «{lhs}» con {len(children)} hijo(s).",
+                    }
+                )
             else:
-                trace.append({
+                trace.append(
+                    {
+                        "stack": stack[:],
+                        "remaining_input": input_list[index:],
+                        "action": f"Error: no GOTO for state {new_state} with {lhs}",
+                        "type": "error",
+                        "explain": "Falta transición GOTO tras la reducción.",
+                    }
+                )
+                return trace, False, None
+
+        elif action_type == "accept":
+            trace.append(
+                {
                     "stack": stack[:],
                     "remaining_input": input_list[index:],
-                    "action": f"Error: no GOTO for state {new_state} with {lhs}",
-                    "type": "error"
-                })
-                return trace, False
-        
-        elif action_type == "accept":
-            trace.append({
-                "stack": stack[:],
-                "remaining_input": input_list[index:],
-                "action": "Accept",
-                "type": "accept"
-            })
-            return trace, True
-        
+                    "action": "Accept",
+                    "type": "accept",
+                    "explain": "La entrada pertenece al lenguaje de la gramática.",
+                }
+            )
+            root = val_stack[-1] if val_stack else None
+            return trace, True, root
+
         else:
-            trace.append({
-                "stack": stack[:],
-                "remaining_input": input_list[index:],
-                "action": f"Error: unknown action {action_type}",
-                "type": "error"
-            })
-            return trace, False
+            trace.append(
+                {
+                    "stack": stack[:],
+                    "remaining_input": input_list[index:],
+                    "action": f"Error: unknown action {action_type}",
+                    "type": "error",
+                    "explain": "Acción desconocida en la tabla.",
+                }
+            )
+            return trace, False, None
 
 
 def print_lr1_states(states):
@@ -367,7 +342,7 @@ def main():
     print_lr1_goto_table(goto_table, non_terminals)
 
     input_string = read_input("input.txt")
-    trace, valid = lr1_parse(input_string, action_table, goto_table, rules, non_terminals[0])
+    trace, valid, _tree = lr1_parse(input_string, action_table, goto_table, rules, non_terminals[0])
 
     with open("trace.json", "w") as f:
         json.dump(trace, f, indent=2)

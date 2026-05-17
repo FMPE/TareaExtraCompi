@@ -1,25 +1,7 @@
-"""
-Parser LR(0).
-
-Reutiliza load_grammar_from_string, process_grammar, get_symbols del módulo lr1_parser.
-Reutiliza lr1_parse para el algoritmo de parsing stack-driven (idéntico al de LR(1)
-una vez construidas las tablas ACTION/GOTO).
-
-Diferencias clave vs LR(1):
-- Los items NO llevan lookahead: [A -> α • β]
-- closure() no propaga lookaheads
-- En la tabla ACTION, un item reducible [A -> α•] genera REDUCE para TODOS los
-  terminales (no hay lookahead), lo que produce frecuentes conflictos shift-reduce.
-"""
-
+"""LR(0): ítems, autómata, tablas ACTION/GOTO y análisis shift-reduce."""
 from collections import defaultdict
-from lr1_parser import (
-    load_grammar_from_string,
-    process_grammar,
-    get_symbols,
-    clear_first_cache,
-    lr1_parse,
-)
+
+from lr1_parser import lr1_parse  # misma máquina de parsing que LR(1)
 
 
 class LR0Item:
@@ -30,28 +12,15 @@ class LR0Item:
         self.dot_pos = dot_pos
 
     def __eq__(self, other):
-        return (self.rule_num == other.rule_num and
-                self.dot_pos == other.dot_pos)
+        return (
+            self.rule_num == other.rule_num
+            and self.dot_pos == other.dot_pos
+            and self.lhs == other.lhs
+            and self.rhs == other.rhs
+        )
 
     def __hash__(self):
-        return hash((self.rule_num, self.dot_pos))
-
-    def __repr__(self):
-        rhs_with_dot = self.rhs[:]
-        rhs_with_dot.insert(self.dot_pos, "•")
-        rhs_str = ' '.join(rhs_with_dot).replace('ε', 'epsilon')
-        return f"[{self.lhs} -> {rhs_str}]"
-
-    def to_dict(self):
-        rhs_with_dot = self.rhs[:]
-        rhs_with_dot.insert(self.dot_pos, "•")
-        return {
-            "rule_num": self.rule_num,
-            "lhs": self.lhs,
-            "rhs": self.rhs,
-            "dot_pos": self.dot_pos,
-            "display": f"[{self.lhs} -> {' '.join(rhs_with_dot).replace('ε', 'epsilon')}]",
-        }
+        return hash((self.rule_num, self.lhs, tuple(self.rhs), self.dot_pos))
 
     def next_symbol(self):
         if self.dot_pos < len(self.rhs):
@@ -63,6 +32,18 @@ class LR0Item:
 
     def advance_dot(self):
         return LR0Item(self.rule_num, self.lhs, self.rhs, self.dot_pos + 1)
+
+    def to_dict(self):
+        rhs_with_dot = self.rhs[:]
+        rhs_with_dot.insert(self.dot_pos, "•")
+        return {
+            "rule_num": self.rule_num,
+            "lhs": self.lhs,
+            "rhs": self.rhs,
+            "dot_pos": self.dot_pos,
+            "lookahead": None,
+            "display": f"[{self.lhs} -> {' '.join(rhs_with_dot).replace('ε', 'epsilon')}]",
+        }
 
 
 def closure_lr0(items, grammar):
@@ -86,7 +67,6 @@ def closure_lr0(items, grammar):
         if item.rhs == ["ε"] and item.dot_pos == 0:
             epsilon_items.add(LR0Item(item.rule_num, item.lhs, item.rhs, 1))
     result.update(epsilon_items)
-
     return result
 
 
@@ -142,69 +122,62 @@ def build_lr0_automaton(grammar, start_symbol):
     return states, transitions
 
 
+def _terminals_with_dollar(terminals):
+    return sorted(terminals) + ["$"]
+
+
 def build_lr0_parsing_table(states, transitions, grammar, rules, terminals, non_terminals):
-    """
-    Construye las tablas ACTION y GOTO para LR(0).
-
-    Diferencia vs LR(1): las reducciones se aplican a TODOS los terminales (incluido $),
-    ya que LR(0) no usa lookahead.
-
-    Retorna (action, goto, conflicts).
-    """
+    """LR(0): reduce en todos los terminales + $ para ítems completos (salvo accept)."""
     action = defaultdict(dict)
     goto = defaultdict(dict)
     conflicts = []
 
-    augmented_start = non_terminals[0] + "'"
-    all_terminals = list(terminals) + ["$"]
-
-    def _register_conflict(state_idx, symbol, existing, new):
-        existing_type, existing_value = existing
-        new_type, new_value = new
-        if existing_type == "shift" and new_type == "reduce":
-            kind = "shift-reduce"
-        elif existing_type == "reduce" and new_type == "shift":
-            kind = "shift-reduce"
-        elif existing_type == "reduce" and new_type == "reduce":
-            kind = "reduce-reduce"
-        else:
-            kind = f"{existing_type}-{new_type}"
-        msg = (f"Conflicto {kind} en ACTION[{state_idx}, {symbol}]: "
-               f"existente={existing_type} {existing_value}, nuevo={new_type} {new_value}")
-        conflicts.append({
-            "state": state_idx,
-            "symbol": symbol,
-            "kind": kind,
-            "existing": {"type": existing_type, "value": existing_value},
-            "new": {"type": new_type, "value": new_value},
-            "message": msg,
-        })
+    start = non_terminals[0]
+    aug = start + "'"
+    term_row = _terminals_with_dollar(terminals)
 
     for i, state in enumerate(states):
         for item in state:
-            if item.is_reducible():
-                if item.lhs == augmented_start:
-                    new_entry = ("accept", None)
-                    if "$" in action[i] and action[i]["$"] != new_entry:
-                        _register_conflict(i, "$", action[i]["$"], new_entry)
-                    else:
-                        action[i]["$"] = new_entry
-                elif item.rule_num >= 0:
-                    new_entry = ("reduce", item.rule_num)
-                    for terminal in all_terminals:
-                        if terminal in action[i] and action[i][terminal] != new_entry:
-                            _register_conflict(i, terminal, action[i][terminal], new_entry)
-                        else:
-                            action[i][terminal] = new_entry
-            else:
+            if not item.is_reducible():
                 next_sym = item.next_symbol()
-                if next_sym and next_sym in terminals and (i, next_sym) in transitions:
-                    next_state = transitions[(i, next_sym)]
-                    new_entry = ("shift", next_state)
-                    if next_sym in action[i] and action[i][next_sym] != new_entry:
-                        _register_conflict(i, next_sym, action[i][next_sym], new_entry)
+                if next_sym and next_sym not in grammar and (i, next_sym) in transitions:
+                    nxt = transitions[(i, next_sym)]
+                    prev = action[i].get(next_sym)
+                    if prev is not None and prev != ("shift", nxt):
+                        conflicts.append(
+                            {
+                                "state": i,
+                                "symbol": next_sym,
+                                "message": f"Conflicto shift/reduce o múltiple acción: {prev} vs shift {nxt}",
+                            }
+                        )
                     else:
-                        action[i][next_sym] = new_entry
+                        action[i][next_sym] = ("shift", nxt)
+            else:
+                if item.lhs == aug:
+                    prev = action[i].get("$")
+                    if prev is not None and prev != ("accept", None):
+                        conflicts.append(
+                            {
+                                "state": i,
+                                "symbol": "$",
+                                "message": f"Conflicto en accept: {prev}",
+                            }
+                        )
+                    action[i]["$"] = ("accept", None)
+                elif item.rule_num >= 0:
+                    for a in term_row:
+                        prev = action[i].get(a)
+                        new_act = ("reduce", item.rule_num)
+                        if prev is not None and prev != new_act:
+                            conflicts.append(
+                                {
+                                    "state": i,
+                                    "symbol": a,
+                                    "message": f"Conflicto reduce: {prev} vs {new_act}",
+                                }
+                            )
+                        action[i][a] = new_act
 
         for nt in non_terminals:
             if (i, nt) in transitions:
@@ -213,60 +186,176 @@ def build_lr0_parsing_table(states, transitions, grammar, rules, terminals, non_
     return action, goto, conflicts
 
 
-def lr0_parse_from_text(grammar_text, input_text):
-    """
-    Función de alto nivel que recibe texto de gramática e input,
-    y retorna el resultado completo del parsing LR(0).
-    """
-    clear_first_cache()
+def build_slr_parsing_table(states, transitions, grammar, rules, terminals, non_terminals, follow):
+    """SLR(1): reduce solo para símbolos en FOLLOW(A)."""
+    action = defaultdict(dict)
+    goto = defaultdict(dict)
+    conflicts = []
 
-    lines = load_grammar_from_string(grammar_text)
-    grammar, rules = process_grammar(lines)
-    non_terminals, terminals = get_symbols(grammar)
-    start_symbol = non_terminals[0]
+    start = non_terminals[0]
+    aug = start + "'"
 
-    states, transitions = build_lr0_automaton(grammar, start_symbol)
-    action_table, goto_table, conflicts = build_lr0_parsing_table(
-        states, transitions, grammar, rules, terminals, non_terminals
-    )
-
-    input_tokens = input_text.strip().split()
-    trace, valid = lr1_parse(input_tokens, action_table, goto_table, rules, start_symbol)
-
-    states_json = []
     for i, state in enumerate(states):
-        states_json.append({
-            "state_num": i,
-            "items": [item.to_dict() for item in state],
-        })
+        for item in state:
+            if not item.is_reducible():
+                next_sym = item.next_symbol()
+                if next_sym and next_sym not in grammar and (i, next_sym) in transitions:
+                    nxt = transitions[(i, next_sym)]
+                    prev = action[i].get(next_sym)
+                    if prev is not None and prev != ("shift", nxt):
+                        conflicts.append(
+                            {
+                                "state": i,
+                                "symbol": next_sym,
+                                "message": f"Conflicto: {prev} vs shift {nxt}",
+                            }
+                        )
+                    else:
+                        action[i][next_sym] = ("shift", nxt)
+            else:
+                if item.lhs == aug:
+                    prev = action[i].get("$")
+                    if prev is not None and prev != ("accept", None):
+                        conflicts.append(
+                            {
+                                "state": i,
+                                "symbol": "$",
+                                "message": f"Conflicto en accept: {prev}",
+                            }
+                        )
+                    action[i]["$"] = ("accept", None)
+                elif item.rule_num >= 0:
+                    lhs = item.lhs
+                    for a in follow.get(lhs, set()):
+                        prev = action[i].get(a)
+                        new_act = ("reduce", item.rule_num)
+                        if prev is not None and prev != new_act:
+                            conflicts.append(
+                                {
+                                    "state": i,
+                                    "symbol": a,
+                                    "message": f"Conflicto reduce/shift: {prev} vs {new_act}",
+                                }
+                            )
+                        action[i][a] = new_act
 
+        for nt in non_terminals:
+            if (i, nt) in transitions:
+                goto[i][nt] = transitions[(i, nt)]
+
+    return action, goto, conflicts
+
+
+def states_to_json(states):
+    out = []
+    for i, state in enumerate(states):
+        out.append({"state_num": i, "items": [it.to_dict() for it in state]})
+    return out
+
+
+def action_goto_to_json(action_table, goto_table):
     action_json = {}
     for state in action_table:
         action_json[str(state)] = {}
         for terminal in action_table[state]:
             action_type, action_value = action_table[state][terminal]
-            action_json[str(state)][terminal] = {
-                "type": action_type,
-                "value": action_value,
-            }
-
+            action_json[str(state)][terminal] = {"type": action_type, "value": action_value}
     goto_json = {}
     for state in goto_table:
         goto_json[str(state)] = dict(goto_table[state])
+    return action_json, goto_json
 
+
+def run_lr0(grammar_text, input_text):
+    import grammar_common as gc
+
+    from grammar_common import (
+        clear_first_cache,
+        load_grammar_from_string,
+        process_grammar,
+        get_symbols,
+        compute_first,
+        grammar_to_json,
+    )
+
+    clear_first_cache()
+    lines = load_grammar_from_string(grammar_text)
+    grammar, rules = process_grammar(lines)
+    non_terminals, terminals = get_symbols(grammar)
+    for nt in non_terminals:
+        compute_first(nt, grammar)
+
+    states, transitions = build_lr0_automaton(grammar, non_terminals[0])
+    action_table, goto_table, conflicts = build_lr0_parsing_table(
+        states, transitions, grammar, rules, terminals, non_terminals
+    )
+    tokens = input_text.strip().split()
+    trace, valid, parse_tree = lr1_parse(
+        tokens, action_table, goto_table, rules, non_terminals[0]
+    )
+
+    action_json, goto_json = action_goto_to_json(action_table, goto_table)
     return {
-        "success": True,
+        "parser": "lr0",
+        "parser_family": "lr",
+        "parser_label": "LR(0)",
         "valid": valid,
         "trace": trace,
-        "grammar": {
-            "rules": [{"rule_num": r[0], "lhs": r[1], "rhs": r[2]} for r in rules],
-            "non_terminals": non_terminals,
-            "terminals": terminals,
-        },
-        "states": states_json,
+        "grammar": grammar_to_json(rules, non_terminals, terminals),
+        "states": states_to_json(states),
         "action_table": action_json,
         "goto_table": goto_json,
+        "input_tokens": tokens,
         "conflicts": conflicts,
-        "input_tokens": input_tokens,
-        "parser_type": "lr0",
+        "first_sets": {k: sorted(v) for k, v in gc.FIRST.items()},
+        "parse_tree": parse_tree,
+        "derivation_tree": parse_tree,
+    }
+
+
+def run_slr1(grammar_text, input_text):
+    from grammar_common import (
+        clear_first_cache,
+        load_grammar_from_string,
+        process_grammar,
+        get_symbols,
+        compute_first,
+        compute_follow,
+        grammar_to_json,
+    )
+    import grammar_common as gc
+
+    clear_first_cache()
+    lines = load_grammar_from_string(grammar_text)
+    grammar, rules = process_grammar(lines)
+    non_terminals, terminals = get_symbols(grammar)
+    start = non_terminals[0]
+    for nt in non_terminals:
+        compute_first(nt, grammar)
+    follow = compute_follow(grammar, rules, non_terminals, start)
+
+    states, transitions = build_lr0_automaton(grammar, start)
+    action_table, goto_table, conflicts = build_slr_parsing_table(
+        states, transitions, grammar, rules, terminals, non_terminals, follow
+    )
+    tokens = input_text.strip().split()
+    trace, valid, parse_tree = lr1_parse(tokens, action_table, goto_table, rules, start)
+
+    action_json, goto_json = action_goto_to_json(action_table, goto_table)
+    return {
+        "parser": "slr1",
+        "parser_family": "lr",
+        "parser_label": "SLR(1)",
+        "valid": valid,
+        "trace": trace,
+        "grammar": grammar_to_json(rules, non_terminals, terminals),
+        "states": states_to_json(states),
+        "action_table": action_json,
+        "goto_table": goto_json,
+        "input_tokens": tokens,
+        "conflicts": conflicts,
+        "first_sets": {k: sorted(v) for k, v in gc.FIRST.items()},
+        "follow_sets": {k: sorted(v) for k, v in follow.items()},
+        "parse_tree": parse_tree,
+        "derivation_tree": parse_tree,
     }

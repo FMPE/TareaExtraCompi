@@ -1,340 +1,249 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from lr1_parser import (
+
+import grammar_common as gc
+from grammar_common import (
+    clear_first_cache,
+    grammar_to_json,
     load_grammar_from_string,
     process_grammar,
     get_symbols,
     compute_first,
-    clear_first_cache,
+    compute_follow,
+)
+from lr1_parser import (
     build_lr1_automaton,
     build_lr1_parsing_table,
-    lr1_parse
+    lr1_parse,
 )
-from recursive_descent_parser import recursive_descent_parse_from_text
-from ll1_parser import ll1_parse_from_text
-from lr0_parser import lr0_parse_from_text
+from lr0_parser import run_lr0, run_slr1, action_goto_to_json, states_to_json
+from lalr_parser import run_lalr1
+from ll1_parser import run_ll1
+from recursive_descent import run_recursive_descent
+from parser_insights import enrich_parse_response
 
 app = Flask(__name__)
 CORS(app)
 
+PARSER_ALIASES = {
+    "lr1": "lr1",
+    "lr(1)": "lr1",
+    "lr0": "lr0",
+    "lr(0)": "lr0",
+    "slr": "slr1",
+    "slr1": "slr1",
+    "slr(1)": "slr1",
+    "lalr": "lalr1",
+    "lalr1": "lalr1",
+    "lalr(1)": "lalr1",
+    "ll1": "ll1",
+    "ll(1)": "ll1",
+    "rd": "rd",
+    "recursive_descent": "rd",
+    "descenso_recursivo": "rd",
+}
 
-# ---------------------------------------------------------------------------
-# Parser LR(1) — endpoint existente
-# ---------------------------------------------------------------------------
 
-@app.route('/api/parse', methods=['POST'])
-@app.route('/api/parse/lr1', methods=['POST'])
+def run_lr1(grammar_text, input_text):
+    clear_first_cache()
+    lines = load_grammar_from_string(grammar_text)
+    grammar, rules = process_grammar(lines)
+    non_terminals, terminals = get_symbols(grammar)
+    for nt in non_terminals:
+        compute_first(nt, grammar)
+
+    states, transitions = build_lr1_automaton(grammar, non_terminals[0])
+    action_table, goto_table = build_lr1_parsing_table(
+        states, transitions, grammar, rules, terminals, non_terminals
+    )
+    input_tokens = input_text.strip().split()
+    trace, valid, parse_tree = lr1_parse(
+        input_tokens, action_table, goto_table, rules, non_terminals[0]
+    )
+
+    states_json = []
+    for i, state in enumerate(states):
+        states_json.append({"state_num": i, "items": [item.to_dict() for item in state]})
+
+    action_json, goto_json = action_goto_to_json(action_table, goto_table)
+    follow = compute_follow(grammar, rules, non_terminals, non_terminals[0])
+
+    return {
+        "parser": "lr1",
+        "parser_family": "lr",
+        "parser_label": "LR(1)",
+        "valid": valid,
+        "trace": trace,
+        "grammar": grammar_to_json(rules, non_terminals, terminals),
+        "states": states_json,
+        "action_table": action_json,
+        "goto_table": goto_json,
+        "input_tokens": input_tokens,
+        "conflicts": [],
+        "first_sets": {k: sorted(v) for k, v in gc.FIRST.items()},
+        "follow_sets": {k: sorted(v) for k, v in follow.items()},
+        "parse_tree": parse_tree,
+        "derivation_tree": parse_tree,
+    }
+
+
+RUNNERS = {
+    "lr1": run_lr1,
+    "lr0": run_lr0,
+    "slr1": run_slr1,
+    "lalr1": run_lalr1,
+    "ll1": run_ll1,
+    "rd": run_recursive_descent,
+}
+
+
+@app.route("/api/parse", methods=["POST"])
 def parse_input():
     try:
-        data = request.json
-        grammar_text = data.get('grammar', '')
-        input_text = data.get('input', '')
-        
-        if not grammar_text or not input_text:
-            return jsonify({
-                'error': 'Both grammar and input are required',
-                'success': False
-            }), 400
-        
-        clear_first_cache()
-        
-        lines = load_grammar_from_string(grammar_text)
-        grammar, rules = process_grammar(lines)
-        non_terminals, terminals = get_symbols(grammar)
-        
-        for nt in non_terminals:
-            compute_first(nt, grammar)
-        
-        states, transitions = build_lr1_automaton(grammar, non_terminals[0])
-        
-        action_table, goto_table = build_lr1_parsing_table(states, transitions, grammar, rules, terminals, non_terminals)
-        
-        input_tokens = input_text.strip().split()
-        trace, valid = lr1_parse(input_tokens, action_table, goto_table, rules, non_terminals[0])
-        
-        states_json = []
-        for i, state in enumerate(states):
-            states_json.append({
-                "state_num": i,
-                "items": [item.to_dict() for item in state]
-            })
-        
-        action_json = {}
-        for state in action_table:
-            action_json[str(state)] = {}
-            for terminal in action_table[state]:
-                action_type, action_value = action_table[state][terminal]
-                action_json[str(state)][terminal] = {
-                    "type": action_type,
-                    "value": action_value
+        data = request.json or {}
+        grammar_text = data.get("grammar", "")
+        input_text = data.get("input", "")
+        raw_kind = (data.get("parser") or data.get("parser_type") or "lr1").strip().lower()
+        kind = PARSER_ALIASES.get(raw_kind, raw_kind)
+
+        if kind not in RUNNERS:
+            return jsonify(
+                {
+                    "error": f"Parser desconocido: {raw_kind}. "
+                    f"Usa: lr0, slr1, lalr1, lr1, ll1, rd",
+                    "success": False,
                 }
-        
-        goto_json = {}
-        for state in goto_table:
-            goto_json[str(state)] = goto_table[state]
-        
-        return jsonify({
-            'success': True,
-            'valid': valid,
-            'trace': trace,
-            'grammar': {
-                'rules': [{"rule_num": r[0], "lhs": r[1], "rhs": r[2]} for r in rules],
-                'non_terminals': non_terminals,
-                'terminals': terminals
-            },
-            'states': states_json,
-            'action_table': action_json,
-            'goto_table': goto_json,
-            'input_tokens': input_tokens,
-            'parser_type': 'lr1'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'success': False
-        }), 500
-
-
-# ---------------------------------------------------------------------------
-# Parser Descenso Recursivo
-# ---------------------------------------------------------------------------
-
-@app.route('/api/parse/recursive-descent', methods=['POST'])
-def parse_recursive_descent():
-    try:
-        data = request.json
-        grammar_text = data.get('grammar', '')
-        input_text = data.get('input', '')
+            ), 400
 
         if not grammar_text or not input_text:
-            return jsonify({
-                'error': 'Both grammar and input are required',
-                'success': False
-            }), 400
+            return jsonify(
+                {"error": "Se requieren gramática e entrada", "success": False}
+            ), 400
 
-        result = recursive_descent_parse_from_text(grammar_text, input_text)
-
-        if not result.get('success', False):
-            return jsonify(result), 400
-
-        return jsonify(result)
+        payload = RUNNERS[kind](grammar_text, input_text)
+        payload = enrich_parse_response(kind, grammar_text, input_text, payload)
+        payload["success"] = True
+        return jsonify(payload)
 
     except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'success': False
-        }), 500
+        return jsonify({"error": str(e), "success": False}), 500
 
 
-# ---------------------------------------------------------------------------
-# Parser LR(0)
-# ---------------------------------------------------------------------------
-
-@app.route('/api/parse/lr0', methods=['POST'])
-def parse_lr0():
-    try:
-        data = request.json
-        grammar_text = data.get('grammar', '')
-        input_text = data.get('input', '')
-
-        if not grammar_text or not input_text:
-            return jsonify({
-                'error': 'Both grammar and input are required',
-                'success': False
-            }), 400
-
-        result = lr0_parse_from_text(grammar_text, input_text)
-
-        if not result.get('success', False):
-            return jsonify(result), 400
-
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'success': False
-        }), 500
-
-
-# ---------------------------------------------------------------------------
-# Parser LL(1)
-# ---------------------------------------------------------------------------
-
-@app.route('/api/parse/ll1', methods=['POST'])
-def parse_ll1():
-    try:
-        data = request.json
-        grammar_text = data.get('grammar', '')
-        input_text = data.get('input', '')
-
-        if not grammar_text or not input_text:
-            return jsonify({
-                'error': 'Both grammar and input are required',
-                'success': False
-            }), 400
-
-        result = ll1_parse_from_text(grammar_text, input_text)
-
-        if not result.get('success', False):
-            return jsonify(result), 400
-
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'success': False
-        }), 500
-
-
-# ---------------------------------------------------------------------------
-# Listar parsers disponibles
-# ---------------------------------------------------------------------------
-
-@app.route('/api/parsers', methods=['GET'])
-def list_parsers():
-    parsers = [
-        {
-            "id": "recursive_descent",
-            "name": "Descenso Recursivo",
-            "type": "top-down",
-            "endpoint": "/api/parse/recursive-descent",
-            "description": "Parser de descenso recursivo con backtracking. Construye el árbol de derivación de arriba hacia abajo probando cada producción.",
-            "supports_left_recursion": False,
-        },
-        {
-            "id": "ll1",
-            "name": "LL(1) Predictivo",
-            "type": "top-down",
-            "endpoint": "/api/parse/ll1",
-            "description": "Parser predictivo LL(1). Construye tablas FIRST, FOLLOW y la tabla de parsing M[A,a]. Requiere gramáticas sin recursión izquierda y factorizadas.",
-            "supports_left_recursion": False,
-        },
-        {
-            "id": "lr0",
-            "name": "LR(0)",
-            "type": "bottom-up",
-            "endpoint": "/api/parse/lr0",
-            "description": "Parser LR(0). Sin lookahead — las reducciones aplican a todos los terminales. Útil para gramáticas simples; genera conflictos shift-reduce fácilmente.",
-            "supports_left_recursion": True,
-        },
-        {
-            "id": "lr1",
-            "name": "LR(1)",
-            "type": "bottom-up",
-            "endpoint": "/api/parse/lr1",
-            "description": "Parser LR(1) canónico. Construye el autómata LR(1) y las tablas ACTION/GOTO. Soporta recursión izquierda y es el más potente.",
-            "supports_left_recursion": True,
-        },
-    ]
-    return jsonify({
-        'success': True,
-        'parsers': parsers
-    })
-
-
-# ---------------------------------------------------------------------------
-# Health check
-# ---------------------------------------------------------------------------
-
-@app.route('/api/health', methods=['GET'])
+@app.route("/api/health", methods=["GET"])
 def health_check():
-    return jsonify({
-        'status': 'OK',
-        'message': 'Parser Backend is running',
-        'available_parsers': ['recursive_descent', 'll1', 'lr0', 'lr1']
-    })
+    return jsonify(
+        {
+            "status": "OK",
+            "message": "Backend de parsers (LR(0), SLR, LALR, LR(1), LL(1), descenso recursivo)",
+            "parsers": list(RUNNERS.keys()),
+            "intelligent_assistant": True,
+        }
+    )
 
 
-# ---------------------------------------------------------------------------
-# Ejemplos
-# ---------------------------------------------------------------------------
-
-@app.route('/api/examples', methods=['GET'])
+@app.route("/api/examples", methods=["GET"])
 def get_examples():
+    """Ejemplos listos para copiar; `recommended_parsers` sugiere dónde probar cada uno."""
+    expr_lr = "E -> E + T\nE -> T\nT -> T * F\nT -> F\nF -> ( E )\nF -> id"
+    expr_ll1 = (
+        "E -> T E'\n"
+        "E' -> + T E'\n"
+        "E' -> ε\n"
+        "T -> F T'\n"
+        "T' -> * F T'\n"
+        "T' -> ε\n"
+        "F -> ( E )\n"
+        "F -> id"
+    )
     examples = [
         {
-            "name": "Expresión Aritmética (LL(1))",
-            "grammar": "E -> T EP\nEP -> + T EP\nEP -> ε\nT -> F TP\nTP -> * F TP\nTP -> ε\nF -> ( E )\nF -> id",
+            "name": "Ascenso — expresión (recursión izquierda)",
+            "grammar": expr_lr,
             "input": "id + id * id",
-            "description": "Gramática de expresiones aritméticas sin recursión izquierda, apta para LL(1) y Descenso Recursivo.",
-            "compatible_parsers": ["recursive_descent", "ll1", "lr1"]
+            "description": "Clásica para LR(0), SLR(1), LALR(1), LR(1). No sirve para LL(1) tal cual.",
+            "recommended_parsers": ["lr0", "slr1", "lalr1", "lr1"],
         },
         {
-            "name": "Expresión Simple (LL(1))",
-            "grammar": "S -> a B\nS -> b A\nA -> a\nB -> b",
-            "input": "a b",
-            "description": "Gramática simple sin ambigüedades, apta para todos los parsers.",
-            "compatible_parsers": ["recursive_descent", "ll1", "lr0", "lr1"]
+            "name": "Ascenso — paréntesis",
+            "grammar": expr_lr,
+            "input": "id * ( id + id )",
+            "description": "Comprueba shift sobre '(' y cierre con ')'.",
+            "recommended_parsers": ["lr0", "slr1", "lalr1", "lr1"],
         },
         {
-            "name": "Concatenación Básica (LR(0))",
-            "grammar": "S -> A B\nA -> a\nB -> b",
-            "input": "a b",
-            "description": "Gramática mínima sin conflictos shift-reduce. Apta para LR(0) y todos los Bottom-Up.",
-            "compatible_parsers": ["lr0", "lr1"]
+            "name": "Ascenso — cadena inválida (operador suelto)",
+            "grammar": expr_lr,
+            "input": "id + + id",
+            "description": "Debe fallar; útil para ver el asistente de errores.",
+            "recommended_parsers": ["lr0", "slr1", "lalr1", "lr1"],
         },
         {
-            "name": "Conflicto Shift-Reduce (LR(0) falla)",
-            "grammar": "E -> E + T\nE -> T\nT -> T * F\nT -> F\nF -> ( E )\nF -> id",
-            "input": "id + id * id",
-            "description": "Gramática de expresiones con recursión izquierda. En LR(0) genera conflictos shift-reduce; LR(1) los resuelve con lookahead.",
-            "compatible_parsers": ["lr0", "lr1"]
-        },
-        {
-            "name": "Lista con separador (LL(1))",
-            "grammar": "L -> E R\nR -> , E R\nR -> ε\nE -> id",
-            "input": "id , id , id",
-            "description": "Lista de identificadores separados por comas. Gramática LL(1).",
-            "compatible_parsers": ["recursive_descent", "ll1", "lr1"]
-        },
-        {
-            "name": "Expresión con Recursión Izquierda (LR(1))",
-            "grammar": "E -> E + T\nE -> T\nT -> T * F\nT -> F\nF -> ( E )\nF -> id",
-            "input": "id + id * id",
-            "description": "Gramática con recursión izquierda. Solo compatible con parsers Bottom-Up.",
-            "compatible_parsers": ["lr1"]
-        },
-        {
-            "name": "If-Else (LR(1))",
-            "grammar": "S -> if E then S else S\nS -> if E then S\nS -> other\nE -> id",
+            "name": "Ascenso — if / else (dangling else)",
+            "grammar": (
+                "S -> if E then S else S\n"
+                "S -> if E then S\n"
+                "S -> other\n"
+                "E -> id"
+            ),
             "input": "if id then if id then other else other",
-            "description": "Problema clásico del dangling else. Resuelto por LR(1).",
-            "compatible_parsers": ["lr1"]
+            "description": "LR(1) / LALR típicos; compara con SLR si hay conflictos.",
+            "recommended_parsers": ["lr1", "lalr1", "slr1", "lr0"],
         },
         {
-            "name": "Asignación Simple (LR(1))",
+            "name": "Ascenso — lista con ';' (izquierda recursiva)",
+            "grammar": "L -> L ; id\nL -> id",
+            "input": "id ; id ; id",
+            "description": "LR la acepta; LL(1) fallaría sin reescritura.",
+            "recommended_parsers": ["lr0", "slr1", "lalr1", "lr1"],
+        },
+        {
+            "name": "Ascenso — SLR vs LR(0) (lookahead)",
             "grammar": "S -> A a\nS -> B b\nA -> x\nB -> x",
             "input": "x a",
-            "description": "Requiere lookahead para distinguir entre A y B.",
-            "compatible_parsers": ["lr1"]
+            "description": "LR(0) suele tener conflictos; SLR(1) y LR(1) suelen limpiar reduce con FOLLOW.",
+            "recommended_parsers": ["lr0", "slr1", "lr1", "lalr1"],
         },
         {
-            "name": "Producción Epsilon (LR(1))",
-            "grammar": "S -> a A\nS -> b B\nA -> C a\nA -> D b\nB -> C b\nB -> D a\nC -> E\nD -> E\nE -> ε",
-            "input": "b b",
-            "description": "Gramática con producciones epsilon.",
-            "compatible_parsers": ["lr1"]
-        }
+            "name": "Descenso — aⁿbⁿ (LL(1))",
+            "grammar": "S -> a S b\nS -> ε",
+            "input": "a a b b",
+            "description": "LL(1) y descenso recursivo predictivo.",
+            "recommended_parsers": ["ll1", "rd"],
+        },
+        {
+            "name": "Descenso — expresión factorizada (LL(1))",
+            "grammar": expr_ll1,
+            "input": "id + id * id",
+            "description": "Misma idea que la aritmética clásica pero en forma LL(1).",
+            "recommended_parsers": ["ll1", "rd"],
+        },
+        {
+            "name": "Descenso — un par a b",
+            "grammar": "S -> a S b\nS -> ε",
+            "input": "a b",
+            "description": "Caso mínimo n=1.",
+            "recommended_parsers": ["ll1", "rd"],
+        },
+        {
+            "name": "Comparación — LR acepta, LL no (misma gramática LR)",
+            "grammar": expr_lr,
+            "input": "id + id * id",
+            "description": "Ejecuta LR(1) y modo comparar con LL(1): la tabla LL no aplica a recursión izquierda.",
+            "recommended_parsers": ["lr1", "ll1"],
+        },
+        {
+            "name": "Comparación — misma expresión, gramática LL(1)",
+            "grammar": expr_ll1,
+            "input": "id + id * id",
+            "description": "LR(1) y LL(1) deberían aceptar con esta gramática factorizada.",
+            "recommended_parsers": ["lr1", "ll1", "lalr1", "slr1"],
+        },
     ]
-    
-    return jsonify({
-        'success': True,
-        'examples': examples
-    })
 
-if __name__ == '__main__':
-    print("Starting Parser Backend...")
-    print("API Endpoints:")
-    print("  POST /api/parse                  - Parse (LR(1) default)")
-    print("  POST /api/parse/lr1              - Parse with LR(1)")
-    print("  POST /api/parse/lr0              - Parse with LR(0)")
-    print("  POST /api/parse/ll1              - Parse with LL(1)")
-    print("  POST /api/parse/recursive-descent - Parse with Recursive Descent")
-    print("  GET  /api/parsers                - List available parsers")
-    print("  GET  /api/health                 - Health check")
-    print("  GET  /api/examples               - Get example grammars")
-    print("\nServer running on http://localhost:5001")
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    return jsonify({"success": True, "examples": examples})
+
+
+if __name__ == "__main__":
+    print("Backend de parsers — API en http://localhost:5001")
+    print("  POST /api/parse  body: { grammar, input, parser: lr0|slr1|lalr1|lr1|ll1|rd }")
+    app.run(debug=True, host="0.0.0.0", port=5001)

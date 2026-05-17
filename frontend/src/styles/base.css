@@ -1,0 +1,231 @@
+/* ============================================================================
+ * Base — reset suave, tipografía, animaciones globales, overrides Bootstrap.
+ * Las fuentes Inter y JetBrains Mono se cargan desde public/index.html
+ * (preconnect + link) para evitar FOUC y mejorar performance.
+ * ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
+}
+
+h1 { font-size: var(--text-2xl); }
+h2 { font-size: var(--text-xl); }
+h3 { font-size: var(--text-lg); }
+h4 { font-size: var(--text-md); font-weight: 600; }
+h5 { font-size: var(--text-base); font-weight: 600; }
+h6 { font-size: var(--text-sm); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+
+/* --- Focus visible accesible --- */
+:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Microinteracciones globales --- */
+button, .btn, a, .accordion-button {
+  transition: background-color var(--transition-fast),
+              color var(--transition-fast),
+              border-color var(--transition-fast),
+              box-shadow var(--transition-fast),
+              transform var(--transition-fast);
+}
+
+/* ============================================================================
+ * Overrides Bootstrap — usar tokens
+ * ========================================================================== */
+
+.card {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.card-header {
+  background: var(--bg-elevated);
+  border-bottom-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.bg-light {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-primary);
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.border, .border-top, .border-bottom, .border-start, .border-end {
+  border-color: var(--border-subtle) !important;
+}
+
+/* Accordions */
+.accordion {
+  --bs-accordion-bg: var(--bg-elevated);
+  --bs-accordion-border-color: var(--border-subtle);
+  --bs-accordion-color: var(--text-primary);
+  --bs-accordion-btn-color: var(--text-primary);
+  --bs-accordion-btn-bg: var(--bg-elevated);
+  --bs-accordion-active-bg: var(--bg-subtle);
+  --bs-accordion-active-color: var(--text-primary);
+  --bs-accordion-btn-focus-border-color: var(--color-primary-500);
+  --bs-accordion-btn-focus-box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+  --bs-accordion-border-radius: var(--radius-md);
+  --bs-accordion-inner-border-radius: var(--radius-md);
+}
+
+.accordion-button {
+  font-weight: 500;
+}
+.accordion-button:not(.collapsed) {
+  color: var(--color-primary-700);
+  background: var(--bg-subtle);
+}
+.accordion-collapse {
+  transition: height var(--transition-base);
+}
+
+/* Tablas */
+.table {
+  --bs-table-bg: var(--bg-elevated);
+  --bs-table-color: var(--text-primary);
+  --bs-table-border-color: var(--border-subtle);
+  --bs-table-striped-bg: var(--bg-subtle);
+  --bs-table-hover-bg: var(--bg-muted);
+}
+.table th, .table td {
+  border-color: var(--border-subtle);
+}
+.table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+/* Forms */
+.form-control, .form-select {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.form-control:focus, .form-select:focus {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 0.18rem rgba(59, 130, 246, 0.18);
+}
+.form-control::placeholder { color: var(--text-muted); }
+.form-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Botones */
+.btn-primary {
+  --bs-btn-bg: var(--color-primary-600);
+  --bs-btn-border-color: var(--color-primary-600);
+  --bs-btn-hover-bg: var(--color-primary-700);
+  --bs-btn-hover-border-color: var(--color-primary-700);
+  --bs-btn-active-bg: var(--color-primary-700);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--color-primary-600);
+  --bs-btn-border-color: var(--color-primary-500);
+  --bs-btn-hover-bg: var(--color-primary-500);
+  --bs-btn-hover-border-color: var(--color-primary-500);
+}
+.btn { border-radius: var(--radius-md); font-weight: 500; }
+.btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+
+/* Badges */
+.badge {
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.01em;
+}
+
+/* Alerts */
+.alert {
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+.alert-success { background: var(--color-success-50); color: var(--color-success-700); border-color: var(--color-success-100); }
+.alert-danger  { background: var(--color-danger-50);  color: var(--color-danger-700);  border-color: var(--color-danger-100); }
+.alert-warning { background: var(--color-warning-50); color: var(--color-warning-700); border-color: var(--color-warning-100); }
+.alert-info    { background: var(--color-info-50);    color: var(--color-info-700);    border-color: var(--color-info-100); }
+
+/* Dark theme: ajustar alerts a fondos translúcidos */
+[data-theme="dark"] .alert-success { background: rgba(16, 185, 129, 0.10); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.25); }
+[data-theme="dark"] .alert-danger  { background: rgba(239, 68, 68, 0.10);  color: #fca5a5; border-color: rgba(239, 68, 68, 0.25); }
+[data-theme="dark"] .alert-warning { background: rgba(245, 158, 11, 0.10); color: #fcd34d; border-color: rgba(245, 158, 11, 0.25); }
+[data-theme="dark"] .alert-info    { background: rgba(6, 182, 212, 0.10);  color: #67e8f9; border-color: rgba(6, 182, 212, 0.25); }
+
+/* Inline code en texto */
+:not(pre) > code {
+  background: var(--bg-subtle);
+  color: var(--color-primary-700);
+  padding: 0.12em 0.36em;
+  border-radius: var(--radius-sm);
+  font-size: 0.88em;
+}
+[data-theme="dark"] :not(pre) > code {
+  color: var(--color-primary-300);
+}
+
+/* Animación de entrada genérica */
+.fade-in {
+  animation: fadeIn 0.35s var(--transition-base);
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar sutil */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--radius-full); border: 2px solid var(--bg-app); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Reducir motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "stack": [
+      0,
+      2
+    ],
+    "remaining_input": [
+      "d",
+      "d",
+      "$"
+    ],
+    "action": "Shift d, goto state 2",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abd\u00bb y pasar al estado 2.",
+    "shifted": "d"
+  },
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "d",
+      "$"
+    ],
+    "action": "Reduce by rule 2: C -> d",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "C",
+    "rule_rhs": [
+      "d"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abC\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      5
+    ],
+    "remaining_input": [
+      "d",
+      "$"
+    ],
+    "action": "Shift d, goto state 5",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abd\u00bb y pasar al estado 5.",
+    "shifted": "d"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      6
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 2: C -> d",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "C",
+    "rule_rhs": [
+      "d"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abC\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 0: S -> C C",
+    "type": "reduce",
+    "rule_num": 0,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "C",
+      "C"
+    ],
+    "explain": "Reducir con la regla 0: construir nodo \u00abS\u00bb con 2 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Accept",
+    "type": "accept",
+    "explain": "La entrada pertenece al lenguaje de la gram\u00e1tica."
+  }
+]

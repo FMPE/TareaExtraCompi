@@ -1,0 +1,100 @@
+[
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "a",
+      "z",
+      "c",
+      "$"
+    ],
+    "action": "Shift a, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "shifted": "a"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      7
+    ],
+    "remaining_input": [
+      "z",
+      "c",
+      "$"
+    ],
+    "action": "Shift z, goto state 7",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abz\u00bb y pasar al estado 7.",
+    "shifted": "z"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      9
+    ],
+    "remaining_input": [
+      "c",
+      "$"
+    ],
+    "action": "Reduce by rule 4: A -> z",
+    "type": "reduce",
+    "rule_num": 4,
+    "rule_lhs": "A",
+    "rule_rhs": [
+      "z"
+    ],
+    "explain": "Reducir con la regla 4: construir nodo \u00abA\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      9,
+      12
+    ],
+    "remaining_input": [
+      "c",
+      "$"
+    ],
+    "action": "Shift c, goto state 12",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abc\u00bb y pasar al estado 12.",
+    "shifted": "c"
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 0: S -> a A c",
+    "type": "reduce",
+    "rule_num": 0,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "a",
+      "A",
+      "c"
+    ],
+    "explain": "Reducir con la regla 0: construir nodo \u00abS\u00bb con 3 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Accept",
+    "type": "accept",
+    "explain": "La entrada pertenece al lenguaje de la gram\u00e1tica."
+  }
+]

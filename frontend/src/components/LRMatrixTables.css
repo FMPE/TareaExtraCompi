@@ -1,0 +1,117 @@
+.lr-matrix-wrap {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.lr-matrix-table {
+  margin: 0;
+}
+
+.lr-matrix-table code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: transparent;
+  padding: 0;
+}
+
+.lr-matrix-table thead th {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-color: var(--border-subtle);
+}
+
+.lr-matrix-term, .lr-matrix-nt {
+  font-family: var(--font-mono);
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+.lr-matrix-term { background: var(--bg-subtle) !important; }
+.lr-matrix-nt   { background: var(--bg-subtle) !important; }
+
+/* Action color-coding */
+.lr-matrix-table td.cell-shift {
+  background: var(--action-shift-bg);
+  color: var(--action-shift-fg);
+  border-color: var(--action-shift-bd);
+}
+.lr-matrix-table td.cell-reduce {
+  background: var(--action-reduce-bg);
+  color: var(--action-reduce-fg);
+  border-color: var(--action-reduce-bd);
+}
+.lr-matrix-table td.cell-accept {
+  background: var(--action-accept-bg);
+  color: var(--action-accept-fg);
+  font-weight: 700;
+  border-color: var(--action-accept-bd);
+}
+.lr-matrix-table td.cell-goto {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+.lr-matrix-table td.cell-shift code,
+.lr-matrix-table td.cell-reduce code,
+.lr-matrix-table td.cell-accept code,
+.lr-matrix-table td.cell-goto code {
+  color: inherit;
+}
+
+/* Highlight de simulación paso a paso */
+.lr-matrix-highlight-row {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: -2px;
+}
+
+.lr-matrix-highlight-rowcell {
+  filter: brightness(0.96);
+}
+
+.lr-matrix-highlight-cell {
+  outline: 2px solid var(--color-warning-500) !important;
+  outline-offset: -2px;
+  font-weight: 700 !important;
+  filter: brightness(1.04);
+  box-shadow: inset 0 0 0 2px var(--color-warning-500);
+}
+
+[data-theme="dark"] .lr-matrix-highlight-rowcell { filter: brightness(1.15); }
+
+/* Leyenda */
+.lr-matrix-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border-subtle);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.lr-matrix-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.lr-matrix-legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.lr-matrix-legend-swatch.swatch-shift  { background: var(--action-shift-bg); border-color: var(--action-shift-bd); }
+.lr-matrix-legend-swatch.swatch-reduce { background: var(--action-reduce-bg); border-color: var(--action-reduce-bd); }
+.lr-matrix-legend-swatch.swatch-accept { background: var(--action-accept-bg); border-color: var(--action-accept-bd); }
+.lr-matrix-legend-swatch.swatch-goto   { background: var(--bg-subtle); }

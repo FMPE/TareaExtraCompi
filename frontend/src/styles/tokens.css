@@ -1,0 +1,162 @@
+/* ============================================================================
+ * Design tokens — light + dark theme.
+ * Activar dark con `<html data-theme="dark">`.
+ * ========================================================================== */
+
+:root {
+  /* --- Brand / semánticos --- */
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-300: #93c5fd;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+
+  --color-success-50:  #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-500: #10b981;
+  --color-success-700: #047857;
+
+  --color-warning-50:  #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-700: #b45309;
+
+  --color-danger-50:   #fef2f2;
+  --color-danger-100:  #fee2e2;
+  --color-danger-500:  #ef4444;
+  --color-danger-700:  #b91c1c;
+
+  --color-info-50:     #ecfeff;
+  --color-info-100:    #cffafe;
+  --color-info-500:    #06b6d4;
+  --color-info-700:    #0e7490;
+
+  /* --- Acciones LR (color-coding semántico) --- */
+  --action-shift-bg:  var(--color-success-50);
+  --action-shift-fg:  var(--color-success-700);
+  --action-shift-bd:  var(--color-success-100);
+  --action-reduce-bg: var(--color-primary-50);
+  --action-reduce-fg: var(--color-primary-700);
+  --action-reduce-bd: var(--color-primary-100);
+  --action-accept-bg: var(--color-warning-50);
+  --action-accept-fg: var(--color-warning-700);
+  --action-accept-bd: var(--color-warning-100);
+  --action-error-bg:  var(--color-danger-50);
+  --action-error-fg:  var(--color-danger-700);
+  --action-error-bd:  var(--color-danger-100);
+
+  /* --- Neutrales (light por defecto) --- */
+  --bg-app:        #f8fafc;
+  --bg-elevated:   #ffffff;
+  --bg-subtle:     #f1f5f9;
+  --bg-muted:      #e2e8f0;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-primary:  #0f172a;
+  --text-secondary:#334155;
+  --text-muted:    #64748b;
+  --text-inverse:  #ffffff;
+
+  /* --- Sidebar --- */
+  --sidebar-bg:        #ffffff;
+  --sidebar-border:    var(--border-subtle);
+  --sidebar-item-hover:#f1f5f9;
+  --sidebar-item-active-bg: var(--color-primary-50);
+  --sidebar-item-active-fg: var(--color-primary-700);
+  --topbar-bg:         #ffffff;
+  --topbar-border:     var(--border-subtle);
+
+  /* --- Tipografía --- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;    /* 12 */
+  --text-sm: 0.875rem;   /* 14 */
+  --text-base: 1rem;     /* 16 */
+  --text-md: 1.0625rem;  /* 17 */
+  --text-lg: 1.25rem;    /* 20 */
+  --text-xl: 1.5rem;     /* 24 */
+  --text-2xl: 1.75rem;   /* 28 */
+
+  --lh-tight: 1.25;
+  --lh-base:  1.55;
+  --lh-relaxed: 1.7;
+
+  /* --- Espaciado (4px scale) --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* --- Sombras --- */
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04), 0 1px 3px 0 rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+
+  /* --- Bordes redondeados --- */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* --- Transiciones --- */
+  --transition-fast: 150ms ease-out;
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Z-index --- */
+  --z-sidebar: 50;
+  --z-topbar: 60;
+  --z-drawer-backdrop: 70;
+  --z-drawer: 71;
+  --z-toast: 100;
+}
+
+/* ============================================================================
+ * Dark theme overrides
+ * ========================================================================== */
+[data-theme="dark"] {
+  --bg-app:        #0b1220;
+  --bg-elevated:   #111a2e;
+  --bg-subtle:     #172033;
+  --bg-muted:      #1f2a44;
+  --border-subtle: #1f2a44;
+  --border-strong: #334155;
+  --text-primary:  #e2e8f0;
+  --text-secondary:#cbd5e1;
+  --text-muted:    #94a3b8;
+  --text-inverse:  #0b1220;
+
+  --sidebar-bg:        #0d1426;
+  --sidebar-border:    #1f2a44;
+  --sidebar-item-hover:#172033;
+  --sidebar-item-active-bg: rgba(59, 130, 246, 0.15);
+  --sidebar-item-active-fg: var(--color-primary-300);
+  --topbar-bg:         #0d1426;
+  --topbar-border:     #1f2a44;
+
+  /* Action cells: bg sutil oscuro, fg color brillante */
+  --action-shift-bg:  rgba(16, 185, 129, 0.12);
+  --action-shift-fg:  #34d399;
+  --action-shift-bd:  rgba(16, 185, 129, 0.25);
+  --action-reduce-bg: rgba(59, 130, 246, 0.12);
+  --action-reduce-fg: #60a5fa;
+  --action-reduce-bd: rgba(59, 130, 246, 0.25);
+  --action-accept-bg: rgba(245, 158, 11, 0.12);
+  --action-accept-fg: #fbbf24;
+  --action-accept-bd: rgba(245, 158, 11, 0.25);
+  --action-error-bg:  rgba(239, 68, 68, 0.12);
+  --action-error-fg:  #f87171;
+  --action-error-bd:  rgba(239, 68, 68, 0.25);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+}

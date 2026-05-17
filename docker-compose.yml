@@ -1,0 +1,23 @@
+# Despliegue multiplataforma: un solo comando levanta API + web con URL única (puerto 8080).
+# Uso: desde esta carpeta (PextraE2_2): docker compose up --build
+
+services:
+  api:
+    build: ./backend
+    container_name: parsers-api
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ""
+    container_name: parsers-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped

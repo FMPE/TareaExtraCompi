@@ -1,0 +1,67 @@
+[
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "a",
+      "b",
+      "x",
+      "$"
+    ],
+    "action": "Shift a, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "shifted": "a"
+  },
+  {
+    "stack": [
+      0,
+      2
+    ],
+    "remaining_input": [
+      "b",
+      "x",
+      "$"
+    ],
+    "action": "Reduce by rule 1: A -> a",
+    "type": "reduce",
+    "rule_num": 1,
+    "rule_lhs": "A",
+    "rule_rhs": [
+      "a"
+    ],
+    "explain": "Reducir con la regla 1: construir nodo \u00abA\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      2,
+      5
+    ],
+    "remaining_input": [
+      "b",
+      "x",
+      "$"
+    ],
+    "action": "Shift b, goto state 5",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abb\u00bb y pasar al estado 5.",
+    "shifted": "b"
+  },
+  {
+    "stack": [
+      0,
+      2,
+      5
+    ],
+    "remaining_input": [
+      "x",
+      "$"
+    ],
+    "action": "Error: no action for state 5 with token x",
+    "type": "error",
+    "explain": "No hay entrada en ACTION para este estado y lookahead."
+  }
+]

@@ -64,7 +64,9 @@ def run_test(test_name):
 
         # Parse input
         input_string = read_input(input_path)
-        trace, valid = lr1_parse(input_string, action_table, goto_table, rules, non_terminals[0])
+        trace, valid, _parse_tree = lr1_parse(
+            input_string, action_table, goto_table, rules, non_terminals[0]
+        )
 
         # Save trace for debugging
         trace_file = f"trace_{test_name}.json"

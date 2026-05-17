@@ -1,59 +1,109 @@
-import React from 'react';
-import { Accordion, Table, Badge } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Accordion, Table, Badge, Row, Col } from 'react-bootstrap';
 import AutomatonViewer from './AutomatonViewer';
+import TraceStepper from './TraceStepper';
+import LRMatrixTables from './LRMatrixTables';
+import SyntaxTreeView from './SyntaxTreeView';
+import IntelligentAssistantPanel from './IntelligentAssistantPanel';
+import ExportPdfButton from './ExportPdfButton';
+import ExportDotButton from './ExportDotButton';
+import SectionBadge from './SectionBadge';
+import { findParser } from '../context/ParserSelectionContext';
 import './ParserResult.css';
 
 const ParserResult = ({ result }) => {
-  if (!result) return null;
+  const [simStep, setSimStep] = useState(0);
 
-  const parserType = result.parser_type || 'lr1';
+  useEffect(() => {
+    if (!result || result.compare || result.success === false) return;
+    setSimStep(0);
+  }, [result]);
 
-  const parserNames = {
-    recursive_descent: 'Descenso Recursivo',
-    ll1: 'LL(1) Predictivo',
-    lr0: 'LR(0)',
-    lr1: 'LR(1)',
-  };
+  const onStepChange = useCallback((i) => {
+    setSimStep(i);
+  }, []);
 
-  // --- Badge colors for trace types ---
+  if (!result || result.success === false || result.compare) return null;
+
+  const label = result.parser_label || result.parser || 'Parser';
+  const family = result.parser_family || 'lr';
+
+  const treeTitles =
+    family === 'lr'
+      ? {
+          main: 'Árbol sintáctico (parse tree)',
+          sub:
+            'Estructura reconstruida en shift/reduce. Sirve como base de un AST; un AST “de compilador” suele simplificar operadores y tipos.',
+          deriv: 'Árbol de derivación (referencia)',
+          derivSub:
+            'En ascenso LR la derivación es implícita (postorden de reducciones); el parse tree es la forma estándar de visualizar el análisis.',
+        }
+      : {
+          main: 'Árbol de derivación (descenso)',
+          sub: 'Derivación más a la izquierda según la tabla LL(1).',
+          deriv: 'Vista AST estructural',
+          derivSub:
+            'Misma estructura que la derivación: un AST con semántica extra requeriría otra pasada (no implementada).',
+        };
+
   const badgeColor = {
     shift: 'primary',
     reduce: 'warning',
     accept: 'success',
     error: 'danger',
-    match: 'info',
-    predict: 'primary',
-    enter: 'secondary',
-    try_production: 'light',
-    backtrack: 'danger',
-    exit_success: 'success',
-    exit_fail: 'danger',
-    fail_match: 'warning',
+    expand: 'info',
+    match: 'primary',
+    call: 'secondary',
+    return: 'dark',
   };
 
-  // =====================================================================
-  // Shared renderers
-  // =====================================================================
+  const fmtStack = (step) => {
+    if (!step.stack) return '—';
+    if (Array.isArray(step.stack)) return step.stack.join(' | ');
+    return String(step.stack);
+  };
 
-  const renderRules = () => (
-    <Table striped bordered hover responsive size="sm" className="fade-in">
+  const treePrimary = result.parse_tree || result.derivation_tree;
+
+  const simStepData = result.trace?.[simStep] || {};
+  const stackTop = Array.isArray(simStepData.stack) && simStepData.stack.length
+    ? simStepData.stack[simStepData.stack.length - 1]
+    : null;
+  const hlState =
+    family === 'lr' && stackTop != null && Number.isFinite(Number(stackTop))
+      ? Number(stackTop)
+      : null;
+  const hlSym =
+    simStepData.shifted ??
+    (Array.isArray(simStepData.remaining_input) && simStepData.remaining_input.length
+      ? simStepData.remaining_input[0]
+      : null);
+
+  const renderTraceTable = () => (
+    <Table striped bordered hover responsive className="fade-in">
       <thead>
         <tr>
           <th>#</th>
-          <th>Regla</th>
+          <th>Tipo</th>
+          <th>Acción</th>
+          <th>Explicación</th>
+          <th>Pila / contexto</th>
+          <th>Entrada restante</th>
         </tr>
       </thead>
       <tbody>
-        {result.grammar?.rules?.map((rule, i) => (
-          <tr key={i}>
-            <td>{rule.rule_num ?? i}</td>
+        {result.trace.map((step, index) => (
+          <tr key={index} className={index === simStep ? 'table-info' : ''}>
+            <td>{index + 1}</td>
             <td>
-              <code>
-                {typeof rule === 'string'
-                  ? rule
-                  : `${rule.lhs} → ${rule.rhs.join(' ')}`}
-              </code>
+              <Badge bg={badgeColor[step.type] || 'secondary'}>
+                {(step.type || '?').toUpperCase()}
+              </Badge>
             </td>
+            <td>{step.action}</td>
+            <td className="small">{step.explain || '—'}</td>
+            <td>{fmtStack(step)}</td>
+            <td>{(step.remaining_input || []).join(' ')}</td>
           </tr>
         ))}
       </tbody>
@@ -62,45 +112,12 @@ const ParserResult = ({ result }) => {
 
   const renderTokens = () => (
     <ul className="list-group fade-in">
-      {result.input_tokens?.map((token, i) => (
+      {result.input_tokens.map((token, i) => (
         <li key={i} className="list-group-item">
           Token: <strong>{token}</strong>
         </li>
       ))}
     </ul>
-  );
-
-  // =====================================================================
-  // LR(1) specific renderers
-  // =====================================================================
-
-  const renderLR1TraceTable = () => (
-    <Table striped bordered hover responsive className="fade-in">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Tipo</th>
-          <th>Acción</th>
-          <th>Stack</th>
-          <th>Entrada restante</th>
-        </tr>
-      </thead>
-      <tbody>
-        {result.trace?.map((step, index) => (
-          <tr key={index}>
-            <td>{index + 1}</td>
-            <td>
-              <Badge bg={badgeColor[step.type] || 'secondary'}>
-                {step.type?.toUpperCase()}
-              </Badge>
-            </td>
-            <td>{step.action}</td>
-            <td>{step.stack?.join(', ')}</td>
-            <td>{step.remaining_input?.join(' ')}</td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
   );
 
   const renderActionTable = () => (
@@ -118,11 +135,11 @@ const ParserResult = ({ result }) => {
           Object.entries(actions).map(([symbol, action], i) => (
             <tr key={`${state}-${symbol}-${i}`}>
               <td>{state}</td>
-              <td><code>{symbol}</code></td>
               <td>
-                <Badge bg={badgeColor[action.type] || 'secondary'}>
-                  {action.type}
-                </Badge>
+                <code>{symbol}</code>
+              </td>
+              <td>
+                <Badge bg={badgeColor[action.type] || 'secondary'}>{action.type}</Badge>
               </td>
               <td>{action.value ?? '—'}</td>
             </tr>
@@ -137,7 +154,7 @@ const ParserResult = ({ result }) => {
       <thead>
         <tr>
           <th>Estado</th>
-          <th>No Terminal</th>
+          <th>No terminal</th>
           <th>Siguiente estado</th>
         </tr>
       </thead>
@@ -146,7 +163,9 @@ const ParserResult = ({ result }) => {
           Object.entries(gotos).map(([symbol, target], i) => (
             <tr key={`${state}-${symbol}-${i}`}>
               <td>{state}</td>
-              <td><code>{symbol}</code></td>
+              <td>
+                <code>{symbol}</code>
+              </td>
               <td>{target}</td>
             </tr>
           ))
@@ -155,414 +174,284 @@ const ParserResult = ({ result }) => {
     </Table>
   );
 
-  // =====================================================================
-  // LL(1) specific renderers
-  // =====================================================================
-
-  const renderFirstFollowSets = () => (
-    <div className="fade-in">
-      <h6>Conjuntos FIRST</h6>
-      <Table striped bordered hover responsive size="sm">
-        <thead>
-          <tr>
-            <th>No Terminal</th>
-            <th>FIRST</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(result.first_sets || {}).map(([nt, first]) => (
-            <tr key={nt}>
-              <td><code>{nt}</code></td>
-              <td>{'{ ' + first.join(', ') + ' }'}</td>
+  const renderParseTable = () => {
+    const M = result.parse_table || {};
+    const rows = [];
+    Object.entries(M).forEach(([nt, cols]) => {
+      Object.entries(cols).forEach(([term, cells]) => {
+        cells.forEach((cell, i) => {
+          rows.push(
+            <tr key={`${nt}-${term}-${i}`}>
+              <td>
+                <code>{nt}</code>
+              </td>
+              <td>
+                <code>{term}</code>
+              </td>
+              <td>{cell.rule_num}</td>
+              <td>
+                <code>
+                  {cell.lhs} → {(cell.rhs || []).join(' ')}
+                </code>
+              </td>
             </tr>
-          ))}
-        </tbody>
-      </Table>
-
-      <h6 className="mt-3">Conjuntos FOLLOW</h6>
-      <Table striped bordered hover responsive size="sm">
-        <thead>
-          <tr>
-            <th>No Terminal</th>
-            <th>FOLLOW</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(result.follow_sets || {}).map(([nt, follow]) => (
-            <tr key={nt}>
-              <td><code>{nt}</code></td>
-              <td>{'{ ' + follow.join(', ') + ' }'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
-  );
-
-  const renderLL1Table = () => {
-    if (!result.parsing_table) return null;
-
-    // Recoger todos los terminales usados en la tabla
-    const terminalsSet = new Set();
-    Object.values(result.parsing_table).forEach(row => {
-      Object.keys(row).forEach(t => terminalsSet.add(t));
+          );
+        });
+      });
     });
-    const terminalsList = Array.from(terminalsSet).sort();
-    const nonTerminals = Object.keys(result.parsing_table);
-
     return (
-      <div className="fade-in" style={{ overflowX: 'auto' }}>
-        <Table striped bordered hover responsive size="sm">
-          <thead>
-            <tr>
-              <th>M[A, a]</th>
-              {terminalsList.map(t => (
-                <th key={t}><code>{t}</code></th>
-              ))}
+      <Table striped bordered hover responsive size="sm" className="fade-in">
+        <thead>
+          <tr>
+            <th>M[ no terminal ]</th>
+            <th>Terminal</th>
+            <th>Regla #</th>
+            <th>Producción</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </Table>
+    );
+  };
+
+  const renderSets = (_title, data) => {
+    if (!data || Object.keys(data).length === 0) {
+      return <p className="text-muted small">Sin datos.</p>;
+    }
+    return (
+      <Table striped bordered hover responsive size="sm" className="fade-in">
+        <thead>
+          <tr>
+            <th>Símbolo</th>
+            <th>Conjunto</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Object.entries(data).map(([sym, setv]) => (
+            <tr key={sym}>
+              <td>
+                <code>{sym}</code>
+              </td>
+              <td>
+                <code>{(setv || []).join(', ')}</code>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {nonTerminals.map(nt => (
-              <tr key={nt}>
-                <td><strong><code>{nt}</code></strong></td>
-                {terminalsList.map(t => (
-                  <td key={t}>
-                    {result.parsing_table[nt][t]
-                      ? <code>{result.parsing_table[nt][t].production}</code>
-                      : <span className="text-muted">—</span>}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
-    );
-  };
-
-  const renderLL1Conflicts = () => {
-    if (!result.conflicts || result.conflicts.length === 0) return null;
-    return (
-      <div className="alert alert-warning fade-in">
-        <h6>⚠️ Conflictos detectados ({result.conflicts.length})</h6>
-        <ul className="mb-0">
-          {result.conflicts.map((c, i) => (
-            <li key={i}>{c.message}</li>
           ))}
-        </ul>
-        <small className="text-muted">
-          La gramática no es LL(1). Los resultados del parsing pueden ser incorrectos.
-        </small>
-      </div>
+        </tbody>
+      </Table>
     );
   };
 
-  const renderLL1TraceTable = () => (
-    <Table striped bordered hover responsive className="fade-in">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Tipo</th>
-          <th>Acción</th>
-          <th>Pila</th>
-          <th>Entrada restante</th>
-        </tr>
-      </thead>
-      <tbody>
-        {result.trace?.map((step, index) => (
-          <tr key={index}>
-            <td>{step.step || index + 1}</td>
-            <td>
-              <Badge bg={badgeColor[step.type] || 'secondary'}>
-                {step.type?.toUpperCase()}
-              </Badge>
-            </td>
-            <td>{step.action}</td>
-            <td><code>{step.stack?.slice().reverse().join(' ')}</code></td>
-            <td>{step.remaining_input?.join(' ')}</td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  );
-
-  // =====================================================================
-  // Recursive Descent specific renderers
-  // =====================================================================
-
-  const renderRDTraceTable = () => (
-    <Table striped bordered hover responsive className="fade-in">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Tipo</th>
-          <th>Acción</th>
-          <th>Posición</th>
-          <th>Token actual</th>
-          <th>Prof.</th>
-        </tr>
-      </thead>
-      <tbody>
-        {result.trace?.map((step, index) => (
-          <tr key={index} style={{ paddingLeft: `${(step.depth || 0) * 10}px` }}>
-            <td>{step.step || index + 1}</td>
-            <td>
-              <Badge bg={badgeColor[step.type] || 'secondary'}>
-                {step.type?.toUpperCase().replace('_', ' ')}
-              </Badge>
-            </td>
-            <td>
-              <span style={{ marginLeft: `${(step.depth || 0) * 12}px` }}>
-                {step.action}
-              </span>
-            </td>
-            <td>{step.position}</td>
-            <td><code>{step.current_token}</code></td>
-            <td>{step.depth}</td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  );
-
-  const renderParseTree = (node, key = 'root') => {
-    if (!node) return <span className="text-muted">No se generó árbol de derivación</span>;
-
-    if (node.type === 'terminal') {
+  const renderConflicts = () => {
+    const c = result.conflicts || [];
+    if (!c.length) {
       return (
-        <li key={key}>
-          <Badge bg="success">{node.value}</Badge>
-        </li>
+        <p className="text-muted small mb-0">
+          Sin conflictos reportados en la construcción de tablas.
+        </p>
       );
     }
-
     return (
-      <li key={key}>
-        <strong><code>{node.symbol}</code></strong>
-        {node.production && (
-          <small className="text-muted ms-2">({node.production})</small>
-        )}
-        {node.children && node.children.length > 0 && (
-          <ul className="parse-tree-children">
-            {node.children.map((child, i) =>
-              renderParseTree(child, `${key}-${i}`)
-            )}
-          </ul>
-        )}
-      </li>
+      <ul className="list-group">
+        {c.map((item, i) => (
+          <li key={i} className="list-group-item list-group-item-warning">
+            {typeof item === 'string' ? item : item.message || JSON.stringify(item)}
+          </li>
+        ))}
+      </ul>
     );
   };
 
-  // =====================================================================
-  // Main render by parser type
-  // =====================================================================
-
-  const renderLR1Result = () => (
-    <Accordion defaultActiveKey="0" flush alwaysOpen className="mt-4">
-      <Accordion.Item eventKey="0">
-        <Accordion.Header>📄 Reglas de la gramática</Accordion.Header>
-        <Accordion.Body>{renderRules()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="1">
-        <Accordion.Header>📦 Tokens de entrada</Accordion.Header>
-        <Accordion.Body>{renderTokens()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="2">
-        <Accordion.Header>📍 Traza del análisis</Accordion.Header>
-        <Accordion.Body>{renderLR1TraceTable()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="3">
-        <Accordion.Header>⚙️ Tabla de Acción</Accordion.Header>
-        <Accordion.Body>{renderActionTable()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="4">
-        <Accordion.Header>🔁 Tabla GOTO</Accordion.Header>
-        <Accordion.Body>{renderGotoTable()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="5">
-        <Accordion.Header>📊 Autómata LR(1)</Accordion.Header>
-        <Accordion.Body>
-          <AutomatonViewer 
-            states={result.states}
-            transitions={result.transitions}
-            actionTable={result.action_table}
-            gotoTable={result.goto_table}
-          />
-        </Accordion.Body>
-      </Accordion.Item>
-    </Accordion>
+  const renderRules = () => (
+    <Table striped bordered hover responsive size="sm" className="fade-in">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Regla</th>
+        </tr>
+      </thead>
+      <tbody>
+        {result.grammar?.rules?.map((rule, i) => (
+          <tr key={i}>
+            <td>{rule.rule_num ?? i}</td>
+            <td>
+              <code>
+                {typeof rule === 'string' ? rule : `${rule.lhs} → ${rule.rhs.join(' ')}`}
+              </code>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </Table>
   );
 
-  const renderLL1Result = () => (
-    <Accordion defaultActiveKey="0" flush alwaysOpen className="mt-4">
-      <Accordion.Item eventKey="0">
-        <Accordion.Header>📄 Reglas de la gramática</Accordion.Header>
-        <Accordion.Body>{renderRules()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="1">
-        <Accordion.Header>📦 Tokens de entrada</Accordion.Header>
-        <Accordion.Body>{renderTokens()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="2">
-        <Accordion.Header>📐 Conjuntos FIRST y FOLLOW</Accordion.Header>
-        <Accordion.Body>{renderFirstFollowSets()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="3">
-        <Accordion.Header>📋 Tabla de Parsing LL(1)</Accordion.Header>
-        <Accordion.Body>
-          {renderLL1Conflicts()}
-          {renderLL1Table()}
-        </Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="4">
-        <Accordion.Header>📍 Traza del análisis</Accordion.Header>
-        <Accordion.Body>{renderLL1TraceTable()}</Accordion.Body>
-      </Accordion.Item>
-    </Accordion>
-  );
-
-  const renderRDResult = () => (
-    <Accordion defaultActiveKey="0" flush alwaysOpen className="mt-4">
-      <Accordion.Item eventKey="0">
-        <Accordion.Header>📄 Reglas de la gramática</Accordion.Header>
-        <Accordion.Body>{renderRules()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="1">
-        <Accordion.Header>📦 Tokens de entrada</Accordion.Header>
-        <Accordion.Body>{renderTokens()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="2">
-        <Accordion.Header>📍 Traza del análisis (paso a paso)</Accordion.Header>
-        <Accordion.Body>{renderRDTraceTable()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="3">
-        <Accordion.Header>🌳 Árbol de Derivación</Accordion.Header>
-        <Accordion.Body>
-          <ul className="parse-tree-root">
-            {renderParseTree(result.parse_tree)}
-          </ul>
-        </Accordion.Body>
-      </Accordion.Item>
-    </Accordion>
-  );
-
-  // =====================================================================
-  // LR(0) specific renderers
-  // =====================================================================
-
-  const renderLR0Conflicts = () => {
-    if (!result.conflicts || result.conflicts.length === 0) return null;
-    return (
-      <div className="alert alert-warning fade-in">
-        <h6>⚠️ Conflictos detectados ({result.conflicts.length})</h6>
-        <ul className="mb-0">
-          {result.conflicts.map((c, i) => (
-            <li key={i}>
-              <Badge bg="danger" className="me-2">{c.kind}</Badge>
-              {c.message}
-            </li>
-          ))}
-        </ul>
-        <small className="text-muted">
-          La gramática no es LR(0). Se conserva la primera acción asignada en cada celda; los resultados del parsing pueden ser incorrectos.
-        </small>
-      </div>
-    );
-  };
-
-  const renderLR0Result = () => (
-    <Accordion defaultActiveKey="0" flush alwaysOpen className="mt-4">
-      <Accordion.Item eventKey="0">
-        <Accordion.Header>📄 Reglas de la gramática</Accordion.Header>
-        <Accordion.Body>{renderRules()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="1">
-        <Accordion.Header>📦 Tokens de entrada</Accordion.Header>
-        <Accordion.Body>{renderTokens()}</Accordion.Body>
-      </Accordion.Item>
-
-      {result.conflicts && result.conflicts.length > 0 && (
-        <Accordion.Item eventKey="conflicts">
-          <Accordion.Header>
-            ⚠️ Conflictos ({result.conflicts.length})
-          </Accordion.Header>
-          <Accordion.Body>{renderLR0Conflicts()}</Accordion.Body>
-        </Accordion.Item>
-      )}
-
-      <Accordion.Item eventKey="2">
-        <Accordion.Header>📍 Traza del análisis</Accordion.Header>
-        <Accordion.Body>{renderLR1TraceTable()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="3">
-        <Accordion.Header>⚙️ Tabla de Acción</Accordion.Header>
-        <Accordion.Body>{renderActionTable()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="4">
-        <Accordion.Header>🔁 Tabla GOTO</Accordion.Header>
-        <Accordion.Body>{renderGotoTable()}</Accordion.Body>
-      </Accordion.Item>
-
-      <Accordion.Item eventKey="5">
-        <Accordion.Header>📊 Autómata LR(0)</Accordion.Header>
-        <Accordion.Body>
-          <AutomatonViewer
-            states={result.states}
-            transitions={result.transitions}
-            actionTable={result.action_table}
-            gotoTable={result.goto_table}
-          />
-        </Accordion.Body>
-      </Accordion.Item>
-    </Accordion>
-  );
-
-  const renderByParserType = () => {
-    switch (parserType) {
-      case 'll1':
-        return renderLL1Result();
-      case 'recursive_descent':
-        return renderRDResult();
-      case 'lr0':
-        return renderLR0Result();
-      case 'lr1':
-      default:
-        return renderLR1Result();
-    }
-  };
+  const parserMeta = findParser(result.parser);
+  const familyTone = parserMeta.family === 'top-down' ? 'top-down' : 'bottom-up';
+  const familyLabel = parserMeta.family === 'top-down' ? 'Top-Down' : 'Bottom-Up';
 
   return (
-    <div className="container mt-5">
-      <h3 className="text-center mb-4">
-        📘 Resultados — {parserNames[parserType] || parserType}
-      </h3>
+    <div className="parser-result fade-in">
+      <div className="parser-result-header">
+        <div className="parser-result-title-block">
+          <SectionBadge tone="results" icon="✓">Resultados</SectionBadge>
+          <h2 className="parser-result-title">
+            {label}
+            <SectionBadge tone={familyTone} className="ms-2">{familyLabel}</SectionBadge>
+          </h2>
+        </div>
+        <div className="parser-result-actions">
+          <ExportPdfButton result={result} />
+        </div>
+      </div>
 
       {result.valid ? (
-        <div className="alert alert-success text-center fade-in" role="alert">
-          ✅ Entrada aceptada por la gramática
+        <div className="alert alert-success fade-in d-flex align-items-center gap-2" role="alert">
+          <span aria-hidden="true">✓</span>
+          <span><strong>Entrada aceptada</strong> · la cadena pertenece al lenguaje.</span>
         </div>
       ) : (
-        <div className="alert alert-danger text-center fade-in" role="alert">
-          ❌ Entrada inválida o no aceptada
+        <div className="alert alert-danger fade-in d-flex align-items-center gap-2" role="alert">
+          <span aria-hidden="true">✗</span>
+          <span><strong>Entrada rechazada</strong> · revisa el asistente para detalles.</span>
         </div>
       )}
 
-      {renderByParserType()}
+      <IntelligentAssistantPanel assistant={result.intelligent_assistant} />
+
+      <Row className="g-3 mb-4">
+        <Col lg={6}>
+          <SyntaxTreeView
+            title={treeTitles.main}
+            node={treePrimary}
+            subtitle={treeTitles.sub}
+            dot={result.dot_tree}
+          />
+        </Col>
+        <Col lg={6}>
+          <SyntaxTreeView
+            title={treeTitles.deriv}
+            node={treePrimary}
+            subtitle={treeTitles.derivSub}
+            dot={result.dot_tree}
+          />
+        </Col>
+      </Row>
+      {result.dot_tree && (
+        <div className="d-flex justify-content-center mb-4">
+          <ExportDotButton dot={result.dot_tree} filename={`arbol-${label}`} />
+        </div>
+      )}
+
+      <Accordion defaultActiveKey="sim" flush alwaysOpen className="mt-4 parser-result-accordion">
+        <Accordion.Item eventKey="sim">
+          <Accordion.Header>📍 Simulación paso a paso y tablas dinámicas</Accordion.Header>
+          <Accordion.Body>
+            <TraceStepper trace={result.trace || []} onStepChange={onStepChange} />
+            {family === 'lr' && result.action_table && (
+              <LRMatrixTables
+                actionTable={result.action_table}
+                gotoTable={result.goto_table}
+                highlightState={hlState}
+                highlightSymbol={hlSym}
+              />
+            )}
+            {family === 'topdown' && result.parse_table && (
+              <p className="small text-muted mb-0">
+                En LL(1) la tabla predictiva es la referencia principal; resalta mentalmente la fila del
+                no terminal en la cima de la pila del paso actual.
+              </p>
+            )}
+          </Accordion.Body>
+        </Accordion.Item>
+
+        <Accordion.Item eventKey="0">
+          <Accordion.Header>📄 Reglas de la gramática</Accordion.Header>
+          <Accordion.Body>{renderRules()}</Accordion.Body>
+        </Accordion.Item>
+
+        <Accordion.Item eventKey="1">
+          <Accordion.Header>🔤 Tokens de entrada</Accordion.Header>
+          <Accordion.Body>{renderTokens()}</Accordion.Body>
+        </Accordion.Item>
+
+        <Accordion.Item eventKey="2">
+          <Accordion.Header>📜 Traza completa (todas las filas)</Accordion.Header>
+          <Accordion.Body>{renderTraceTable()}</Accordion.Body>
+        </Accordion.Item>
+
+        {family === 'topdown' && (
+          <>
+            <Accordion.Item eventKey="td-sets">
+              <Accordion.Header>🧮 FIRST / FOLLOW</Accordion.Header>
+              <Accordion.Body>
+                <h6>FIRST</h6>
+                {renderSets('FIRST', result.first_sets)}
+                <h6 className="mt-3">FOLLOW</h6>
+                {renderSets('FOLLOW', result.follow_sets)}
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="td-table">
+              <Accordion.Header>🗂️ Tabla predictiva M[A, a]</Accordion.Header>
+              <Accordion.Body>{renderParseTable()}</Accordion.Body>
+            </Accordion.Item>
+          </>
+        )}
+
+        {family === 'lr' && (
+          <>
+            <Accordion.Item eventKey="3">
+              <Accordion.Header>⚙️ Tabla ACTION (listado)</Accordion.Header>
+              <Accordion.Body>{renderActionTable()}</Accordion.Body>
+            </Accordion.Item>
+
+            <Accordion.Item eventKey="4">
+              <Accordion.Header>🔁 Tabla GOTO (listado)</Accordion.Header>
+              <Accordion.Body>{renderGotoTable()}</Accordion.Body>
+            </Accordion.Item>
+
+            <Accordion.Item eventKey="lr-sets">
+              <Accordion.Header>🧮 FIRST {result.follow_sets ? '/ FOLLOW' : ''}</Accordion.Header>
+              <Accordion.Body>
+                <h6>FIRST</h6>
+                {renderSets('FIRST', result.first_sets)}
+                {result.follow_sets && (
+                  <>
+                    <h6 className="mt-3">FOLLOW</h6>
+                    {renderSets('FOLLOW', result.follow_sets)}
+                  </>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
+
+            <Accordion.Item eventKey="5">
+              <Accordion.Header>📊 Autómata LR (Graphviz)</Accordion.Header>
+              <Accordion.Body>
+                <AutomatonViewer
+                  states={result.states}
+                  transitions={result.transitions}
+                  actionTable={result.action_table}
+                  gotoTable={result.goto_table}
+                  title={`Autómata ${label}`}
+                  dot={result.dot_automaton}
+                />
+                {result.dot_automaton && (
+                  <div className="d-flex justify-content-end mt-3">
+                    <ExportDotButton
+                      dot={result.dot_automaton}
+                      filename={`automata-${label}`}
+                    />
+                  </div>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
+          </>
+        )}
+
+        <Accordion.Item eventKey="conf">
+          <Accordion.Header>⚠️ Conflictos / advertencias de tablas</Accordion.Header>
+          <Accordion.Body>{renderConflicts()}</Accordion.Body>
+        </Accordion.Item>
+      </Accordion>
     </div>
   );
 };

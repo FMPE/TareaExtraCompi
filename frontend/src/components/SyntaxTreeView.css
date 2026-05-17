@@ -1,0 +1,32 @@
+.syntax-tree-view {
+  background: #fafbff;
+}
+
+.tree-line {
+  line-height: 1.6;
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.9rem;
+}
+
+.tree-nonterminal {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+.tree-terminal {
+  color: #198754;
+}
+
+.tree-epsilon {
+  color: #6f42c1;
+  font-style: italic;
+}
+
+.tree-rule {
+  font-size: 0.75rem;
+}
+
+.tree-parent {
+  border-bottom: 1px dashed #dee2e6;
+  margin-bottom: 0.25rem;
+}

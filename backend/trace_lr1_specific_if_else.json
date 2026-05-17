@@ -1,0 +1,357 @@
+[
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "if",
+      "id",
+      "then",
+      "if",
+      "id",
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift if, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abif\u00bb y pasar al estado 3.",
+    "shifted": "if"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      5
+    ],
+    "remaining_input": [
+      "id",
+      "then",
+      "if",
+      "id",
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift id, goto state 5",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 5.",
+    "shifted": "id"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4
+    ],
+    "remaining_input": [
+      "then",
+      "if",
+      "id",
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Reduce by rule 3: E -> id",
+    "type": "reduce",
+    "rule_num": 3,
+    "rule_lhs": "E",
+    "rule_rhs": [
+      "id"
+    ],
+    "explain": "Reducir con la regla 3: construir nodo \u00abE\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6
+    ],
+    "remaining_input": [
+      "then",
+      "if",
+      "id",
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift then, goto state 6",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abthen\u00bb y pasar al estado 6.",
+    "shifted": "then"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9
+    ],
+    "remaining_input": [
+      "if",
+      "id",
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift if, goto state 9",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abif\u00bb y pasar al estado 9.",
+    "shifted": "if"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      5
+    ],
+    "remaining_input": [
+      "id",
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift id, goto state 5",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 5.",
+    "shifted": "id"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      11
+    ],
+    "remaining_input": [
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Reduce by rule 3: E -> id",
+    "type": "reduce",
+    "rule_num": 3,
+    "rule_lhs": "E",
+    "rule_rhs": [
+      "id"
+    ],
+    "explain": "Reducir con la regla 3: construir nodo \u00abE\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      11,
+      13
+    ],
+    "remaining_input": [
+      "then",
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift then, goto state 13",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abthen\u00bb y pasar al estado 13.",
+    "shifted": "then"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      11,
+      13,
+      8
+    ],
+    "remaining_input": [
+      "other",
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift other, goto state 8",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abother\u00bb y pasar al estado 8.",
+    "shifted": "other"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      11,
+      13,
+      14
+    ],
+    "remaining_input": [
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Reduce by rule 2: S -> other",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "other"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abS\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      11,
+      13,
+      14,
+      15
+    ],
+    "remaining_input": [
+      "else",
+      "other",
+      "$"
+    ],
+    "action": "Shift else, goto state 15",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abelse\u00bb y pasar al estado 15.",
+    "shifted": "else"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      11,
+      13,
+      14,
+      15,
+      8
+    ],
+    "remaining_input": [
+      "other",
+      "$"
+    ],
+    "action": "Shift other, goto state 8",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abother\u00bb y pasar al estado 8.",
+    "shifted": "other"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      9,
+      11,
+      13,
+      14,
+      15,
+      16
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 2: S -> other",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "other"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abS\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      4,
+      6,
+      7
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 0: S -> if E then S else S",
+    "type": "reduce",
+    "rule_num": 0,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "if",
+      "E",
+      "then",
+      "S",
+      "else",
+      "S"
+    ],
+    "explain": "Reducir con la regla 0: construir nodo \u00abS\u00bb con 6 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 1: S -> if E then S",
+    "type": "reduce",
+    "rule_num": 1,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "if",
+      "E",
+      "then",
+      "S"
+    ],
+    "explain": "Reducir con la regla 1: construir nodo \u00abS\u00bb con 4 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Accept",
+    "type": "accept",
+    "explain": "La entrada pertenece al lenguaje de la gram\u00e1tica."
+  }
+]

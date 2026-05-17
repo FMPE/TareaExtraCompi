@@ -1,154 +1,195 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { Form, Button, Alert, Badge } from 'react-bootstrap';
+import { Form, Button, Alert, Card } from 'react-bootstrap';
+import FormalSymbolsKeyboard from './FormalSymbolsKeyboard';
+import SectionBadge from './SectionBadge';
+import { apiUrl } from '../config';
+import { findParser, useParserSelection } from '../context/ParserSelectionContext';
+import './ParserForm.css';
 
-const PARSER_ENDPOINTS = {
-  recursive_descent: '/api/parse/recursive-descent',
-  ll1: '/api/parse/ll1',
-  lr0: '/api/parse/lr0',
-  lr1: '/api/parse/lr1',
-};
-
-const PARSER_LABELS = {
-  recursive_descent: { name: 'Descenso Recursivo', type: 'Top-Down', color: 'info' },
-  ll1: { name: 'LL(1) Predictivo', type: 'Top-Down', color: 'info' },
-  lr0: { name: 'LR(0)', type: 'Bottom-Up', color: 'warning' },
-  lr1: { name: 'LR(1)', type: 'Bottom-Up', color: 'warning' },
-};
+function insertAtCursor(textareaRef, value, setValue, snippet) {
+  const el = textareaRef.current;
+  if (!el) {
+    setValue(value + snippet);
+    return;
+  }
+  const start = el.selectionStart ?? value.length;
+  const end = el.selectionEnd ?? value.length;
+  const next = value.slice(0, start) + snippet + value.slice(end);
+  setValue(next);
+  requestAnimationFrame(() => {
+    try {
+      el.focus();
+      const pos = start + snippet.length;
+      el.setSelectionRange(pos, pos);
+    } catch {
+      /* ignore */
+    }
+  });
+}
 
 const ParserForm = ({ onResult }) => {
+  const { parser, parserB, compareMode } = useParserSelection();
   const [grammar, setGrammar] = useState('');
   const [input, setInput] = useState('');
-  const [parserType, setParserType] = useState('lr1');
+  const [activeField, setActiveField] = useState('grammar');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [examples, setExamples] = useState([]);
 
-  useEffect(() => {
-    axios.get('http://localhost:5001/api/examples')
-      .then(res => {
-        if (res.data.success) {
-          setExamples(res.data.examples);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const grammarRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const normalizeGrammar = (g) => g.replace(/\r\n/g, '\n').replace(/λ/g, 'ε');
+
+  const insertText = useCallback(
+    (snippet) => {
+      if (activeField === 'input') {
+        insertAtCursor(inputRef, input, setInput, snippet);
+      } else {
+        insertAtCursor(grammarRef, grammar, setGrammar, snippet);
+      }
+    },
+    [activeField, grammar, input]
+  );
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
+    const grammarPayload = normalizeGrammar(grammar);
+
     try {
-      const endpoint = PARSER_ENDPOINTS[parserType] || PARSER_ENDPOINTS.lr1;
-      const response = await axios.post(`http://localhost:5001${endpoint}`, {
-        grammar,
-        input,
-      });
-      onResult({ ...response.data, parser_type: parserType });
+      if (compareMode) {
+        if (parser === parserB) {
+          setError('Elige dos algoritmos distintos para comparar (cámbialo en el sidebar).');
+          setLoading(false);
+          return;
+        }
+        const [a, b] = await Promise.all([
+          axios.post(apiUrl('/api/parse'), { grammar: grammarPayload, input, parser }),
+          axios.post(apiUrl('/api/parse'), { grammar: grammarPayload, input, parser: parserB }),
+        ]);
+        onResult({
+          compare: true,
+          left: a.data,
+          right: b.data,
+          leftLabel: findParser(parser).label,
+          rightLabel: findParser(parserB).label,
+        });
+      } else {
+        const response = await axios.post(apiUrl('/api/parse'), {
+          grammar: grammarPayload,
+          input,
+          parser,
+        });
+        onResult(response.data);
+      }
     } catch (err) {
-      const errMsg = err.response?.data?.error
-        || 'Error al procesar la entrada. Verifica la gramática o el input.';
-      setError(errMsg);
-      onResult(null);
+      const msg = err.response?.data?.error;
+      setError(
+        msg ||
+          'Error al procesar. Verifica gramática, parser y que la API esté en :5001 (o REACT_APP_API_URL).'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const loadExample = (example) => {
-    setGrammar(example.grammar);
-    setInput(example.input);
-  };
-
-  const compatibleExamples = examples.filter(
-    ex => !ex.compatible_parsers || ex.compatible_parsers.includes(parserType)
-  );
+  const current = findParser(parser);
+  const secondary = compareMode ? findParser(parserB) : null;
 
   return (
-    <div className="container mt-5">
-      <h2 className="text-center mb-4">🔍 Analizador Sintáctico</h2>
-
-      {/* Selector de parser */}
-      <Form.Group controlId="parserType" className="mb-4">
-        <Form.Label><strong>Tipo de Parser</strong></Form.Label>
-        <Form.Select
-          value={parserType}
-          onChange={(e) => {
-            setParserType(e.target.value);
-            setError(null);
-          }}
-        >
-          <optgroup label="Top-Down">
-            <option value="recursive_descent">Descenso Recursivo (con backtracking)</option>
-            <option value="ll1">LL(1) Predictivo</option>
-          </optgroup>
-          <optgroup label="Bottom-Up">
-            <option value="lr0">LR(0)</option>
-            <option value="lr1">LR(1)</option>
-          </optgroup>
-        </Form.Select>
-        <div className="mt-2">
-          <Badge bg={PARSER_LABELS[parserType]?.color || 'secondary'}>
-            {PARSER_LABELS[parserType]?.type}
-          </Badge>{' '}
-          <small className="text-muted">{PARSER_LABELS[parserType]?.name}</small>
-        </div>
-      </Form.Group>
-
-      {/* Ejemplos rápidos */}
-      {compatibleExamples.length > 0 && (
-        <div className="mb-3">
-          <Form.Label><strong>Ejemplos rápidos</strong></Form.Label>
-          <div className="d-flex flex-wrap gap-2">
-            {compatibleExamples.map((ex, i) => (
-              <Button
-                key={i}
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => loadExample(ex)}
-                title={ex.description}
-              >
-                {ex.name}
-              </Button>
-            ))}
+    <Card className="parser-form-card">
+      <Card.Body>
+        <div className="parser-form-header">
+          <div>
+            <h2 className="parser-form-title">Análisis sintáctico</h2>
+            <p className="parser-form-subtitle">
+              {compareMode
+                ? 'Comparación de algoritmos sobre la misma gramática.'
+                : 'Pega tu gramática, escribe la entrada y obtén la traza completa.'}
+            </p>
           </div>
         </div>
-      )}
 
-      <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="grammar">
-          <Form.Label>Gramática</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={5}
-            value={grammar}
-            onChange={(e) => setGrammar(e.target.value)}
-            placeholder={
-              parserType === 'lr1'
-                ? "Ejemplo: E -> E + T\nE -> T\nT -> id"
-                : "Ejemplo: E -> T EP\nEP -> + T EP\nEP -> ε\nT -> id"
-            }
-          />
-        </Form.Group>
+        <div className="parser-form-pills">
+          <SectionBadge tone={current.family === 'top-down' ? 'top-down' : 'bottom-up'}>
+            {current.label}
+          </SectionBadge>
+          {secondary && (
+            <>
+              <span className="parser-form-pill-sep">vs</span>
+              <SectionBadge
+                tone={secondary.family === 'top-down' ? 'top-down' : 'bottom-up'}
+              >
+                {secondary.label}
+              </SectionBadge>
+            </>
+          )}
+        </div>
 
-        <Form.Group controlId="input" className="mt-3">
-          <Form.Label>Entrada</Form.Label>
-          <Form.Control
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ejemplo: id + id"
-          />
-        </Form.Group>
+        <Form onSubmit={handleSubmit} className="parser-form">
+          <div className="parser-form-section">
+            <div className="parser-form-section-head">
+              <SectionBadge tone="input" icon="📝">Entrada</SectionBadge>
+            </div>
 
-        <Button type="submit" variant="primary" className="mt-4 w-100" disabled={loading}>
-          {loading ? 'Procesando...' : 'Parsear'}
-        </Button>
-      </Form>
+            <Form.Group controlId="grammar" className="mt-2">
+              <Form.Label>Gramática</Form.Label>
+              <Form.Control
+                ref={grammarRef}
+                as="textarea"
+                rows={6}
+                value={grammar}
+                onChange={(e) => setGrammar(e.target.value)}
+                onFocus={() => setActiveField('grammar')}
+                className="font-mono"
+                placeholder={
+                  'Ejemplo LR:\nE -> E + T\nE -> T\nT -> id\n\nTambién puedes usar → en lugar de ->'
+                }
+              />
+            </Form.Group>
 
-      {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-    </div>
+            <Form.Group controlId="input" className="mt-3">
+              <Form.Label>Cadena de entrada (tokens separados por espacio)</Form.Label>
+              <Form.Control
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onFocus={() => setActiveField('input')}
+                className="font-mono"
+                placeholder="id + id   ·   a a b b"
+              />
+            </Form.Group>
+
+            <div className="mt-3">
+              <FormalSymbolsKeyboard insertText={insertText} activeTarget={activeField} />
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            className="parser-form-submit w-100"
+            disabled={loading || !grammar || !input}
+          >
+            {loading ? 'Procesando…' : compareMode ? 'Comparar algoritmos' : 'Analizar'}
+          </Button>
+
+          <p className="parser-form-hint">
+            ¿Quieres cambiar el algoritmo? Selecciónalo en el panel lateral.
+          </p>
+        </Form>
+
+        {error && (
+          <Alert variant="danger" className="mt-3 mb-0">
+            {error}
+          </Alert>
+        )}
+      </Card.Body>
+    </Card>
   );
 };
 

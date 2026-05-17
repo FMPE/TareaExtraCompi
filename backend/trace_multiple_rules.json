@@ -1,0 +1,156 @@
+[
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "a",
+      "a",
+      "a",
+      "$"
+    ],
+    "action": "Shift a, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "shifted": "a"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      3
+    ],
+    "remaining_input": [
+      "a",
+      "a",
+      "$"
+    ],
+    "action": "Shift a, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "shifted": "a"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      3,
+      3
+    ],
+    "remaining_input": [
+      "a",
+      "$"
+    ],
+    "action": "Shift a, goto state 3",
+    "type": "shift",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "shifted": "a"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      3,
+      3,
+      5
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 2: A -> epsilon",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "A",
+    "rule_rhs": [
+      "\u03b5"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abA\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      3,
+      5
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 1: A -> a A",
+    "type": "reduce",
+    "rule_num": 1,
+    "rule_lhs": "A",
+    "rule_rhs": [
+      "a",
+      "A"
+    ],
+    "explain": "Reducir con la regla 1: construir nodo \u00abA\u00bb con 2 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      5
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 1: A -> a A",
+    "type": "reduce",
+    "rule_num": 1,
+    "rule_lhs": "A",
+    "rule_rhs": [
+      "a",
+      "A"
+    ],
+    "explain": "Reducir con la regla 1: construir nodo \u00abA\u00bb con 2 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      2
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 1: A -> a A",
+    "type": "reduce",
+    "rule_num": 1,
+    "rule_lhs": "A",
+    "rule_rhs": [
+      "a",
+      "A"
+    ],
+    "explain": "Reducir con la regla 1: construir nodo \u00abA\u00bb con 2 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 0: S -> A",
+    "type": "reduce",
+    "rule_num": 0,
+    "rule_lhs": "S",
+    "rule_rhs": [
+      "A"
+    ],
+    "explain": "Reducir con la regla 0: construir nodo \u00abS\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Accept",
+    "type": "accept",
+    "explain": "La entrada pertenece al lenguaje de la gram\u00e1tica."
+  }
+]

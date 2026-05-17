@@ -1,42 +1,73 @@
-.fade-in {
-  animation: fadeIn 0.3s ease-in;
+.parser-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.parser-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Parse tree styles for Recursive Descent */
-.parse-tree-root {
-  list-style: none;
-  padding-left: 0;
-  font-family: 'Consolas', 'Monaco', monospace;
+.parser-result-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.parse-tree-root ul.parse-tree-children {
-  list-style: none;
-  padding-left: 24px;
-  border-left: 2px solid #dee2e6;
-  margin-top: 4px;
-  margin-bottom: 4px;
+.parser-result-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
-.parse-tree-root li {
-  padding: 3px 0;
-  position: relative;
+.parser-result-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.parse-tree-root li::before {
-  content: '';
-  display: inline-block;
-  width: 12px;
-  height: 1px;
-  background: #dee2e6;
-  vertical-align: middle;
-  margin-right: 6px;
+.parser-result-accordion {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-.parse-tree-root > li::before {
-  display: none;
+.parser-result-accordion .accordion-item {
+  border-color: var(--border-subtle);
 }
+
+.parser-result-accordion .accordion-button {
+  font-weight: 500;
+  font-size: var(--text-sm);
+  background: var(--bg-elevated);
+  padding: var(--space-3) var(--space-4);
+}
+
+.parser-result-accordion .accordion-button:not(.collapsed) {
+  color: var(--color-primary-700);
+  background: var(--bg-subtle);
+}
+
+.parser-result-accordion .accordion-body {
+  padding: var(--space-4);
+  background: var(--bg-elevated);
+}
+
+/* Fade in se hereda del base.css */

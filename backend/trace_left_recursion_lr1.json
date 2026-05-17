@@ -1,0 +1,270 @@
+[
+  {
+    "stack": [
+      0,
+      4
+    ],
+    "remaining_input": [
+      "id",
+      "+",
+      "id",
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Shift id, goto state 4",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 4.",
+    "shifted": "id"
+  },
+  {
+    "stack": [
+      0,
+      1
+    ],
+    "remaining_input": [
+      "+",
+      "id",
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Reduce by rule 5: F -> id",
+    "type": "reduce",
+    "rule_num": 5,
+    "rule_lhs": "F",
+    "rule_rhs": [
+      "id"
+    ],
+    "explain": "Reducir con la regla 5: construir nodo \u00abF\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      5
+    ],
+    "remaining_input": [
+      "+",
+      "id",
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Reduce by rule 3: T -> F",
+    "type": "reduce",
+    "rule_num": 3,
+    "rule_lhs": "T",
+    "rule_rhs": [
+      "F"
+    ],
+    "explain": "Reducir con la regla 3: construir nodo \u00abT\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "+",
+      "id",
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Reduce by rule 1: E -> T",
+    "type": "reduce",
+    "rule_num": 1,
+    "rule_lhs": "E",
+    "rule_rhs": [
+      "T"
+    ],
+    "explain": "Reducir con la regla 1: construir nodo \u00abE\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11
+    ],
+    "remaining_input": [
+      "+",
+      "id",
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Shift +, goto state 11",
+    "type": "shift",
+    "explain": "Empujar terminal \u00ab+\u00bb y pasar al estado 11.",
+    "shifted": "+"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11,
+      4
+    ],
+    "remaining_input": [
+      "id",
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Shift id, goto state 4",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 4.",
+    "shifted": "id"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11,
+      1
+    ],
+    "remaining_input": [
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Reduce by rule 5: F -> id",
+    "type": "reduce",
+    "rule_num": 5,
+    "rule_lhs": "F",
+    "rule_rhs": [
+      "id"
+    ],
+    "explain": "Reducir con la regla 5: construir nodo \u00abF\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11,
+      17
+    ],
+    "remaining_input": [
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Reduce by rule 3: T -> F",
+    "type": "reduce",
+    "rule_num": 3,
+    "rule_lhs": "T",
+    "rule_rhs": [
+      "F"
+    ],
+    "explain": "Reducir con la regla 3: construir nodo \u00abT\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11,
+      17,
+      12
+    ],
+    "remaining_input": [
+      "*",
+      "id",
+      "$"
+    ],
+    "action": "Shift *, goto state 12",
+    "type": "shift",
+    "explain": "Empujar terminal \u00ab*\u00bb y pasar al estado 12.",
+    "shifted": "*"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11,
+      17,
+      12,
+      4
+    ],
+    "remaining_input": [
+      "id",
+      "$"
+    ],
+    "action": "Shift id, goto state 4",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 4.",
+    "shifted": "id"
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11,
+      17,
+      12,
+      18
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 5: F -> id",
+    "type": "reduce",
+    "rule_num": 5,
+    "rule_lhs": "F",
+    "rule_rhs": [
+      "id"
+    ],
+    "explain": "Reducir con la regla 5: construir nodo \u00abF\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3,
+      11,
+      17
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 2: T -> T * F",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "T",
+    "rule_rhs": [
+      "T",
+      "*",
+      "F"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abT\u00bb con 3 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 0: E -> E + T",
+    "type": "reduce",
+    "rule_num": 0,
+    "rule_lhs": "E",
+    "rule_rhs": [
+      "E",
+      "+",
+      "T"
+    ],
+    "explain": "Reducir con la regla 0: construir nodo \u00abE\u00bb con 3 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      3
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Accept",
+    "type": "accept",
+    "explain": "La entrada pertenece al lenguaje de la gram\u00e1tica."
+  }
+]
