@@ -5,6 +5,7 @@ import ParserResult from './components/ParserResult';
 import ParserCompareView from './components/ParserCompareView';
 import ParserHelpPanel from './components/ParserHelpPanel';
 import { ParserSelectionProvider } from './context/ParserSelectionContext';
+import { HistoryProvider } from './context/HistoryContext';
 import './App.css';
 
 const Workspace = () => {
@@ -45,11 +46,13 @@ const Workspace = () => {
 
 const App = () => (
   <ParserSelectionProvider>
-    <div className="App">
-      <AppShell>
-        <Workspace />
-      </AppShell>
-    </div>
+    <HistoryProvider>
+      <div className="App">
+        <AppShell>
+          <Workspace />
+        </AppShell>
+      </div>
+    </HistoryProvider>
   </ParserSelectionProvider>
 );
 

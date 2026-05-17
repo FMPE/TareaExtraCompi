@@ -238,6 +238,30 @@ def get_examples():
             "description": "LR(1) y LL(1) deberían aceptar con esta gramática factorizada.",
             "recommended_parsers": ["lr1", "ll1", "lalr1", "slr1"],
         },
+        {
+            "name": "Conflicto reduce-reduce (LR(0))",
+            "grammar": "S -> A a\nS -> B b\nA -> c\nB -> c",
+            "input": "c a",
+            "description": "LR(0) tiene reduce-reduce entre A→c y B→c en el mismo estado. SLR(1) lo resuelve porque FOLLOW(A)={a} y FOLLOW(B)={b} son disjuntos.",
+            "recommended_parsers": ["lr0", "slr1", "lr1", "lalr1"],
+            "conflict_in": ["lr0"],
+        },
+        {
+            "name": "Shift-reduce (dangling else)",
+            "grammar": "S -> if E then S\nS -> if E then S else S\nS -> id\nE -> b",
+            "input": "if b then if b then id else id",
+            "description": "Ambigüedad del else colgante. Todos los LR muestran shift-reduce; se resuelve dando preferencia al shift.",
+            "recommended_parsers": ["lr0", "slr1", "lr1", "lalr1"],
+            "conflict_in": ["lr0", "slr1", "lalr1", "lr1"],
+        },
+        {
+            "name": "LL(1) falla por recursión izquierda",
+            "grammar": "E -> E + T\nE -> T\nT -> id",
+            "input": "id + id",
+            "description": "LL(1) y descenso recursivo fallan: la recursión izquierda directa hace indeterminada la tabla M. Solución: factorizar.",
+            "recommended_parsers": ["lr0", "slr1", "lalr1", "lr1", "ll1", "rd"],
+            "conflict_in": ["ll1", "rd"],
+        },
     ]
 
     return jsonify({"success": True, "examples": examples})

@@ -3,8 +3,10 @@ import axios from 'axios';
 import { Form, Button, Alert, Card } from 'react-bootstrap';
 import FormalSymbolsKeyboard from './FormalSymbolsKeyboard';
 import SectionBadge from './SectionBadge';
+import ExamplePills from './ExamplePills';
 import { apiUrl } from '../config';
 import { findParser, useParserSelection } from '../context/ParserSelectionContext';
+import { useHistoryContext } from '../context/HistoryContext';
 import './ParserForm.css';
 
 function insertAtCursor(textareaRef, value, setValue, snippet) {
@@ -29,9 +31,16 @@ function insertAtCursor(textareaRef, value, setValue, snippet) {
 }
 
 const ParserForm = ({ onResult }) => {
-  const { parser, parserB, compareMode } = useParserSelection();
-  const [grammar, setGrammar] = useState('');
-  const [input, setInput] = useState('');
+  const {
+    parser,
+    parserB,
+    compareMode,
+    grammar,
+    setGrammar,
+    input,
+    setInput,
+  } = useParserSelection();
+  const { add: addHistory } = useHistoryContext();
   const [activeField, setActiveField] = useState('grammar');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -49,7 +58,7 @@ const ParserForm = ({ onResult }) => {
         insertAtCursor(grammarRef, grammar, setGrammar, snippet);
       }
     },
-    [activeField, grammar, input]
+    [activeField, grammar, input, setGrammar, setInput]
   );
 
   const handleSubmit = async (event) => {
@@ -58,6 +67,8 @@ const ParserForm = ({ onResult }) => {
     setError(null);
 
     const grammarPayload = normalizeGrammar(grammar);
+    const primary = findParser(parser);
+    const secondary = findParser(parserB);
 
     try {
       if (compareMode) {
@@ -74,8 +85,15 @@ const ParserForm = ({ onResult }) => {
           compare: true,
           left: a.data,
           right: b.data,
-          leftLabel: findParser(parser).label,
-          rightLabel: findParser(parserB).label,
+          leftLabel: primary.label,
+          rightLabel: secondary.label,
+        });
+        addHistory({
+          grammar,
+          input,
+          parser,
+          parserLabel: `${primary.label} vs ${secondary.label}`,
+          valid: !!(a.data?.valid && b.data?.valid),
         });
       } else {
         const response = await axios.post(apiUrl('/api/parse'), {
@@ -84,6 +102,13 @@ const ParserForm = ({ onResult }) => {
           parser,
         });
         onResult(response.data);
+        addHistory({
+          grammar,
+          input,
+          parser,
+          parserLabel: response.data?.parser_label || primary.label,
+          valid: !!response.data?.valid,
+        });
       }
     } catch (err) {
       const msg = err.response?.data?.error;
@@ -134,6 +159,8 @@ const ParserForm = ({ onResult }) => {
             <div className="parser-form-section-head">
               <SectionBadge tone="input" icon="📝">Entrada</SectionBadge>
             </div>
+
+            <ExamplePills />
 
             <Form.Group controlId="grammar" className="mt-2">
               <Form.Label>Gramática</Form.Label>

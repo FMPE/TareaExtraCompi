@@ -18,6 +18,8 @@ export const ParserSelectionProvider = ({ children }) => {
   const [parser, setParser] = useState('lr1');
   const [parserB, setParserB] = useState('slr1');
   const [compareMode, setCompareMode] = useState(false);
+  const [grammar, setGrammar] = useState('');
+  const [input, setInput] = useState('');
 
   const value = useMemo(
     () => ({
@@ -27,8 +29,12 @@ export const ParserSelectionProvider = ({ children }) => {
       setParserB,
       compareMode,
       setCompareMode,
+      grammar,
+      setGrammar,
+      input,
+      setInput,
     }),
-    [parser, parserB, compareMode]
+    [parser, parserB, compareMode, grammar, input]
   );
 
   return (

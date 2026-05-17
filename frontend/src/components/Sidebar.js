@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
 import { PARSER_OPTIONS, useParserSelection } from '../context/ParserSelectionContext';
+import HistoryPanel from './HistoryPanel';
 import './Sidebar.css';
 
 const FAMILY_GROUPS = [
@@ -113,6 +114,10 @@ const Sidebar = ({ open, onClose }) => {
             </div>
           )}
         </section>
+
+        <HistoryPanel onLoad={() => {
+          if (typeof window !== 'undefined' && window.innerWidth < 992) onClose?.();
+        }} />
       </nav>
 
       <div className="sidebar-footer">
