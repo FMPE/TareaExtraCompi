@@ -4,6 +4,8 @@ import { Form, Button, Alert, Card } from 'react-bootstrap';
 import FormalSymbolsKeyboard from './FormalSymbolsKeyboard';
 import SectionBadge from './SectionBadge';
 import ExamplePills from './ExamplePills';
+import GrammarLinter from './GrammarLinter';
+import { hasGrammarErrors } from '../utils/grammarLinter';
 import { apiUrl } from '../config';
 import { findParser, useParserSelection } from '../context/ParserSelectionContext';
 import { useHistoryContext } from '../context/HistoryContext';
@@ -176,6 +178,10 @@ const ParserForm = ({ onResult }) => {
                   'Ejemplo LR:\nE -> E + T\nE -> T\nT -> id\n\nTambién puedes usar → en lugar de ->'
                 }
               />
+              <GrammarLinter
+                grammar={grammar}
+                family={['rd', 'll1'].includes(parser) ? 'topdown' : 'lr'}
+              />
             </Form.Group>
 
             <Form.Group controlId="input" className="mt-3">
@@ -200,14 +206,20 @@ const ParserForm = ({ onResult }) => {
             type="submit"
             variant="primary"
             className="parser-form-submit w-100"
-            disabled={loading || !grammar || !input}
+            disabled={loading || !grammar || !input || hasGrammarErrors(grammar)}
           >
             {loading ? 'Procesando…' : compareMode ? 'Comparar algoritmos' : 'Analizar'}
           </Button>
 
-          <p className="parser-form-hint">
-            ¿Quieres cambiar el algoritmo? Selecciónalo en el panel lateral.
-          </p>
+          {grammar && hasGrammarErrors(grammar) ? (
+            <p className="parser-form-hint parser-form-hint-error">
+              Hay errores estructurales en la gramática — revisa el panel de validación.
+            </p>
+          ) : (
+            <p className="parser-form-hint">
+              ¿Quieres cambiar el algoritmo? Selecciónalo en el panel lateral.
+            </p>
+          )}
         </Form>
 
         {error && (

@@ -61,3 +61,12 @@
   font-size: 0.72rem;
   margin: var(--space-2) 0 0;
 }
+
+.parser-form-hint-error {
+  color: var(--color-danger-700);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .parser-form-hint-error {
+  color: #fca5a5;
+}
