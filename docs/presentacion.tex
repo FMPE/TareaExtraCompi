@@ -1,0 +1,287 @@
+% ParserLab — Presentación de la implementación
+% Compilar: pdflatex presentacion.tex (necesita beamer + metropolis)
+% Si no tienes metropolis: cambia \usetheme{metropolis} por \usetheme{Madrid}
+%                          y comenta los \metroset si los hay.
+
+\documentclass[aspectratio=169,10pt]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{listings}
+
+\usetheme{metropolis}
+\metroset{block=fill,progressbar=frametitle}
+
+% Paleta consistente con la app
+\definecolor{plPrimary}{HTML}{2563EB}
+\definecolor{plSuccess}{HTML}{10B981}
+\definecolor{plWarning}{HTML}{F59E0B}
+\definecolor{plDanger}{HTML}{EF4444}
+\definecolor{plInk}{HTML}{0F172A}
+\setbeamercolor{progress bar}{fg=plPrimary}
+\setbeamercolor{frametitle}{bg=plPrimary,fg=white}
+\setbeamercolor{alerted text}{fg=plDanger}
+
+\lstdefinestyle{gram}{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{plPrimary},
+  showstringspaces=false,
+  frame=single,
+  rulecolor=\color{gray!30},
+  framesep=4pt,
+  backgroundcolor=\color{gray!5},
+}
+
+\title{\textbf{ParserLab}}
+\subtitle{Analizadores sintácticos interactivos: \\
+descenso recursivo, LL(1), LR(0), SLR(1), LALR(1), LR(1)}
+\author{Compiladores — Examen 1 (Puntos extra)}
+\institute{UTEC · 2026-1}
+\date{18 de mayo de 2026}
+
+\begin{document}
+
+% =============== Frame 1 — Portada ===============
+\maketitle
+
+% =============== Frame 2 — Objetivo ===============
+\begin{frame}{Objetivo y motivación}
+  \begin{block}{¿Qué es ParserLab?}
+    Aplicación web pedagógica que ejecuta y \alert{visualiza} los
+    seis algoritmos clásicos de análisis sintáctico sobre la misma
+    gramática y entrada.
+  \end{block}
+
+  \begin{itemize}
+    \item Una sola UI: el usuario \textbf{compara} cómo cada parser
+      reacciona ante la misma gramática.
+    \item Cada análisis muestra \textbf{traza paso a paso}, \textbf{construcción
+      de tablas} y \textbf{validación de cadenas}.
+    \item Integra \textbf{IA heurística} para explicar errores y sugerir
+      transformaciones LL(1).
+    \item Pensada para enseñar la \textbf{jerarquía progresiva} de poder
+      expresivo (LR(0) $\subset$ SLR(1) $\subset$ LALR(1) $\subset$ LR(1)).
+  \end{itemize}
+\end{frame}
+
+% =============== Frame 3 — Jerarquía de parsers ===============
+\begin{frame}{Jerarquía implementada}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{\textcolor{plPrimary}{Top-Down}}
+      \begin{itemize}
+        \item Descenso recursivo predictivo
+        \item LL(1) con tabla M[A,a]
+      \end{itemize}
+      \vspace{6pt}
+      Requieren: \emph{sin recursión izquierda directa} y
+      \emph{factorización de prefijos}.
+    \end{block}
+
+    \column{0.48\textwidth}
+    \begin{block}{\textcolor{plWarning}{Bottom-Up}}
+      \begin{itemize}
+        \item LR(0) — sin lookahead
+        \item SLR(1) — reduce restringido a FOLLOW
+        \item LALR(1) — fusión de núcleos LR(1)
+        \item LR(1) canónico
+      \end{itemize}
+      Cada uno resuelve más conflictos que el anterior.
+    \end{block}
+  \end{columns}
+
+  \vspace{8pt}
+  \centering
+  \footnotesize
+  \textbf{6 algoritmos · 1 backend Flask · 1 UI React}
+\end{frame}
+
+% =============== Frame 4 — Arquitectura ===============
+\begin{frame}{Arquitectura}
+  \centering
+  \begin{tikzpicture}[
+    node distance=10mm,
+    box/.style={draw,rounded corners,minimum height=10mm,minimum width=28mm,
+                font=\small,align=center,fill=plPrimary!10,draw=plPrimary},
+    sub/.style={draw,rounded corners,minimum height=6mm,minimum width=20mm,
+                font=\scriptsize,align=center,fill=gray!5,draw=gray!50},
+    arr/.style={->,>=stealth,thick,plInk}
+  ]
+    \node[box] (front) {Frontend\\ React + Bootstrap};
+    \node[box,right=20mm of front] (back) {Backend\\ Flask + Python};
+    \node[box,right=20mm of back] (viz) {Renderer\\ @viz-js/viz (WASM)};
+
+    \node[sub,below=of front,xshift=-18mm] (ui1) {ParserForm};
+    \node[sub,below=of front] (ui2) {ParserResult};
+    \node[sub,below=of front,xshift=18mm] (ui3) {Compare};
+
+    \node[sub,below=of back,xshift=-15mm] (b1) {6 runners};
+    \node[sub,below=of back,xshift=10mm] (b2) {parser\_insights\\ (IA)};
+    \node[sub,below=of b1,xshift=8mm] (b3) {nfa\_lr\\ dot\_export};
+
+    \draw[arr] (front) -- node[above,font=\scriptsize]{POST /api/parse} (back);
+    \draw[arr] (back.south west) |- ([yshift=2mm]b1.north);
+    \draw[arr] (back.south) -- (b2.north);
+    \draw[arr,plPrimary] (front) -- node[above,font=\scriptsize]{dot string} (viz);
+  \end{tikzpicture}
+
+  \vspace{4pt}
+  \footnotesize
+  \textbf{POST /api/parse} con \texttt{\{grammar,input,parser\}} →
+  payload único con traza, tablas, autómatas (DOT), parse tree, asistente IA.
+\end{frame}
+
+% =============== Frame 5 — Lo que ve el usuario ===============
+\begin{frame}{Por cada parser: traza · tablas · veredicto}
+  \begin{itemize}
+    \item \textbf{Simulación paso a paso} con stepper (Inicio/Anterior/Siguiente/Fin)
+      que sincroniza con la tabla resaltando la fila actual.
+    \item \textbf{Tablas ACTION y GOTO} con color-coding semántico:
+      \textcolor{plSuccess}{shift}, \textcolor{plPrimary}{reduce},
+      \textcolor{plWarning}{accept}, \textcolor{plDanger}{error}.
+    \item \textbf{FIRST / FOLLOW / tabla M[A,a]} para top-down; lista de
+      conflictos detectados.
+    \item \textbf{Doble veredicto}: si la \emph{cadena} fue aceptada y si la
+      \emph{gramática} pertenece a la clase del parser.
+  \end{itemize}
+
+  \begin{exampleblock}{Ejemplo de mensaje doble}
+    \textcolor{plDanger}{$\times$ Entrada rechazada} ·
+    \textcolor{plWarning}{$\triangle$ Gramática NO es LR(0): 4 conflictos reduce-reduce.}
+  \end{exampleblock}
+\end{frame}
+
+% =============== Frame 6 — Visualizaciones ===============
+\begin{frame}{Visualizaciones avanzadas}
+  Construidas con \textbf{Graphviz} (vía \texttt{@viz-js/viz}, WebAssembly):
+  layout automático \texttt{dot}, zoom/pan, interactividad inyectada en el SVG.
+
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+    \begin{block}{Bottom-Up}
+      \begin{itemize}
+        \item \textbf{AFN de ítems} LR(0) o LR(1): cada ítem es un nodo,
+          $\varepsilon$-aristas punteadas son el \emph{closure}.
+        \item \textbf{DFA canónico}: resultado de subset-construction.
+        \item Click en nodo $\to$ panel con los ítems del estado.
+      \end{itemize}
+    \end{block}
+
+    \column{0.5\textwidth}
+    \begin{block}{Comunes}
+      \begin{itemize}
+        \item \textbf{Parse tree} / derivación renderizado con Graphviz.
+        \item \textbf{Teclado virtual} de símbolos formales
+          ($\varepsilon, \to, \cup, \cap, \forall, \exists, \Sigma, \ldots$).
+        \item \textbf{Export} a \texttt{.dot}, \texttt{.png} y PDF de tablas.
+      \end{itemize}
+    \end{block}
+  \end{columns}
+\end{frame}
+
+% =============== Frame 7 — IA / Asistente ===============
+\begin{frame}{Asistente inteligente}
+  Módulo \texttt{parser\_insights.py} — heurístico, sin llamadas externas
+  (reproducible sin API keys).
+
+  \begin{itemize}
+    \item \textbf{Explicación de errores en lenguaje natural}: identifica
+      el último paso de error en la traza y describe la causa probable
+      (token inesperado, lookahead sin acción, falta de GOTO, $\ldots$).
+    \item \textbf{Recomendaciones ante ambigüedad}: lista los conflictos
+      shift-reduce / reduce-reduce y sugiere el siguiente nivel
+      (LR(0) $\to$ SLR(1) $\to$ LR(1)).
+    \item \textbf{Sugerencias hacia LL(1)}: detecta recursión izquierda
+      directa y prefijos comunes, propone reescrituras
+      (factorización, eliminación de recursión).
+    \item \textbf{Linter en tiempo real} en el editor de gramática:
+      errores estructurales, no-terminales sin uso, producciones duplicadas.
+  \end{itemize}
+\end{frame}
+
+% =============== Frame 8 — Funcionalidades innovadoras ===============
+\begin{frame}{Funcionalidades de valor agregado}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{UX y productividad}
+      \begin{itemize}
+        \item \textbf{Sidebar} con jerarquía top-down/bottom-up
+        \item \textbf{Modo comparación} side-by-side con bar de diferencias
+        \item \textbf{Historial} persistente en \texttt{localStorage} (20 entradas, dedup)
+        \item \textbf{Catálogo de ejemplos} filtrados por parser, con tag $\triangle$ cuando muestran conflicto
+        \item \textbf{Light / dark theme} con tokens CSS
+      \end{itemize}
+    \end{block}
+
+    \column{0.48\textwidth}
+    \begin{block}{Despliegue \& export}
+      \begin{itemize}
+        \item \textbf{PWA} instalable (manifest, standalone)
+        \item \textbf{Docker compose} (un comando levanta API + Web)
+        \item Deploy público en Render
+        \item Export tablas a \textbf{PDF}, grafos a \textbf{.dot} y \textbf{.png}
+      \end{itemize}
+    \end{block}
+  \end{columns}
+
+  \vspace{4pt}
+  \centering\footnotesize
+  Diseño system con paleta semántica · tipografía Inter + JetBrains Mono.
+\end{frame}
+
+% =============== Frame 9 — Suite de pruebas ===============
+\begin{frame}{Suite de pruebas multi-parser}
+  \texttt{python run\_all\_tests.py} cubre los 6 parsers contra 13 casos:
+  \textbf{78 corridas}, 0 WRONG, 0 ERROR.
+
+  \begin{center}
+  \footnotesize
+  \begin{tabular}{lrrrrr}
+    \toprule
+    \textbf{Parser} & \textbf{OK} & \textbf{CONF-WRONG} & \textbf{WRONG} & \textbf{ERROR} \\
+    \midrule
+    RD       &  9 & 4 & 0 & 0 \\
+    LL(1)    &  9 & 4 & 0 & 0 \\
+    LR(0)    &  7 & 6 & 0 & 0 \\
+    SLR(1)   & 10 & 3 & 0 & 0 \\
+    LALR(1)  & 11 & 2 & 0 & 0 \\
+    LR(1)    & \textbf{13} & 0 & 0 & 0 \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \begin{exampleblock}{Lectura pedagógica}
+    La jerarquía LR(0) $\to$ SLR(1) $\to$ LALR(1) $\to$ LR(1) se observa
+    directamente en el conteo de OK. CONF-WRONG indica que la gramática
+    cae fuera de la clase del parser, no un bug.
+  \end{exampleblock}
+\end{frame}
+
+% =============== Frame 10 — Cierre / demo ===============
+\begin{frame}{Demo \& despliegue}
+  \begin{block}{Stack}
+    React 19 · Flask · @viz-js/viz · svg-pan-zoom · jsPDF · Bootstrap 5
+  \end{block}
+
+  \begin{block}{Levantar localmente}
+    \texttt{docker compose up --build}   \quad → \quad
+    Web en \texttt{http://localhost:8080}
+  \end{block}
+
+  \begin{block}{Uso de IA en el desarrollo}
+    Diseño, refactor y depuración asistidos por Claude · IA integrada
+    en producto vía \texttt{parser\_insights} (heurística determinista).
+  \end{block}
+
+  \vspace{6pt}
+  \centering
+  \Large\textbf{¡Gracias!}\\
+  \small
+  Preguntas y demo en vivo.
+\end{frame}
+
+\end{document}

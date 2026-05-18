@@ -132,12 +132,23 @@ def _escape(s) -> str:
     )
 
 
+def _sanitize_id(s):
+    """Mapea cualquier string a un identificador DOT seguro (alfanumérico + '_')."""
+    out = []
+    for ch in str(s):
+        if ch.isalnum() or ch == "_":
+            out.append(ch)
+        else:
+            out.append(f"x{ord(ch):x}")
+    return "".join(out) or "_"
+
+
 def _item_id(it):
     if len(it) == 5:
         rn, _lhs, _rhs, dp, la = it
-        return f"i_{rn}_{dp}_{_escape(la)}"
+        return f"i_{_sanitize_id(rn)}_{dp}_{_sanitize_id(la)}"
     rn, _lhs, _rhs, dp = it
-    return f"i_{rn}_{dp}"
+    return f"i_{_sanitize_id(rn)}_{dp}"
 
 
 def _item_label(it):

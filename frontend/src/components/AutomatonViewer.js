@@ -49,10 +49,6 @@ const AutomatonViewer = ({
       <div className="alert alert-info mb-0">
         <h5>{title}</h5>
         <p className="mb-0">No hay grafo disponible para mostrar.</p>
-        <small className="text-muted d-block mt-2" style={{fontFamily:'monospace', fontSize:'0.7rem'}}>
-          debug → dot_prop:{dot == null ? 'null/undef' : `string(${dot.length})`} ·
-          states:{Array.isArray(states) ? states.length : 'undef'}
-        </small>
       </div>
     );
   }
