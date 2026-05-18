@@ -18,14 +18,16 @@ const AutomatonViewer = ({
   gotoTable,
   title = 'Autómata LR',
   dot,
+  minHeight = 580,
 }) => {
   const rendererRef = useRef(null);
   const [selectedIdx, setSelectedIdx] = useState(null);
 
-  const finalDot = useMemo(
-    () => dot || buildAutomatonDot(states, actionTable, gotoTable),
-    [dot, states, actionTable, gotoTable]
-  );
+  const finalDot = useMemo(() => {
+    if (dot) return dot;
+    if (states && states.length > 0) return buildAutomatonDot(states, actionTable, gotoTable);
+    return '';
+  }, [dot, states, actionTable, gotoTable]);
 
   // GraphvizRenderer pasa el id del <g class="node"> (p.ej. "state-3")
   const handleNodeClick = useCallback((id) => {
@@ -42,14 +44,20 @@ const AutomatonViewer = ({
       ? states.find((s) => s.state_num === selectedIdx)
       : null;
 
-  if (!states || states.length === 0) {
+  if (!finalDot) {
     return (
       <div className="alert alert-info mb-0">
         <h5>{title}</h5>
-        <p className="mb-0">No hay estados disponibles para mostrar.</p>
+        <p className="mb-0">No hay grafo disponible para mostrar.</p>
+        <small className="text-muted d-block mt-2" style={{fontFamily:'monospace', fontSize:'0.7rem'}}>
+          debug → dot_prop:{dot == null ? 'null/undef' : `string(${dot.length})`} ·
+          states:{Array.isArray(states) ? states.length : 'undef'}
+        </small>
       </div>
     );
   }
+
+  const hasStates = Array.isArray(states) && states.length > 0;
 
   return (
     <div className="automaton-viewer">
@@ -74,10 +82,10 @@ const AutomatonViewer = ({
             <GraphvizRenderer
               ref={rendererRef}
               dot={finalDot}
-              onNodeClick={handleNodeClick}
-              minHeight={580}
+              onNodeClick={hasStates ? handleNodeClick : undefined}
+              minHeight={minHeight}
             />
-            {selectedState && (
+            {hasStates && selectedState && (
               <div className="state-details">
                 <h6>
                   Estado I{selectedState.state_num} — {selectedState.items?.length || 0} ítem(s)

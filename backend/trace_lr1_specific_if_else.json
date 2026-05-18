@@ -2,7 +2,7 @@
   {
     "stack": [
       0,
-      3
+      1
     ],
     "remaining_input": [
       "if",
@@ -16,15 +16,15 @@
       "other",
       "$"
     ],
-    "action": "Shift if, goto state 3",
+    "action": "Shift if, goto state 1",
     "type": "shift",
-    "explain": "Empujar terminal \u00abif\u00bb y pasar al estado 3.",
+    "explain": "Empujar terminal \u00abif\u00bb y pasar al estado 1.",
     "shifted": "if"
   },
   {
     "stack": [
       0,
-      3,
+      1,
       5
     ],
     "remaining_input": [
@@ -46,7 +46,7 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4
     ],
     "remaining_input": [
@@ -71,7 +71,7 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6
     ],
@@ -93,10 +93,10 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9
+      7
     ],
     "remaining_input": [
       "if",
@@ -107,18 +107,18 @@
       "other",
       "$"
     ],
-    "action": "Shift if, goto state 9",
+    "action": "Shift if, goto state 7",
     "type": "shift",
-    "explain": "Empujar terminal \u00abif\u00bb y pasar al estado 9.",
+    "explain": "Empujar terminal \u00abif\u00bb y pasar al estado 7.",
     "shifted": "if"
   },
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
+      7,
       5
     ],
     "remaining_input": [
@@ -137,11 +137,11 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
-      11
+      7,
+      10
     ],
     "remaining_input": [
       "then",
@@ -162,12 +162,12 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
-      11,
-      13
+      7,
+      10,
+      12
     ],
     "remaining_input": [
       "then",
@@ -176,20 +176,20 @@
       "other",
       "$"
     ],
-    "action": "Shift then, goto state 13",
+    "action": "Shift then, goto state 12",
     "type": "shift",
-    "explain": "Empujar terminal \u00abthen\u00bb y pasar al estado 13.",
+    "explain": "Empujar terminal \u00abthen\u00bb y pasar al estado 12.",
     "shifted": "then"
   },
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
-      11,
-      13,
+      7,
+      10,
+      12,
       8
     ],
     "remaining_input": [
@@ -206,12 +206,12 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
-      11,
-      13,
+      7,
+      10,
+      12,
       14
     ],
     "remaining_input": [
@@ -231,12 +231,12 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
-      11,
-      13,
+      7,
+      10,
+      12,
       14,
       15
     ],
@@ -253,12 +253,12 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
-      11,
-      13,
+      7,
+      10,
+      12,
       14,
       15,
       8
@@ -275,12 +275,12 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      9,
-      11,
-      13,
+      7,
+      10,
+      12,
       14,
       15,
       16
@@ -300,10 +300,10 @@
   {
     "stack": [
       0,
-      3,
+      1,
       4,
       6,
-      7
+      9
     ],
     "remaining_input": [
       "$"
@@ -325,7 +325,7 @@
   {
     "stack": [
       0,
-      1
+      3
     ],
     "remaining_input": [
       "$"
@@ -345,7 +345,7 @@
   {
     "stack": [
       0,
-      1
+      3
     ],
     "remaining_input": [
       "$"

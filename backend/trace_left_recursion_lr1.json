@@ -2,7 +2,7 @@
   {
     "stack": [
       0,
-      4
+      2
     ],
     "remaining_input": [
       "id",
@@ -12,15 +12,15 @@
       "id",
       "$"
     ],
-    "action": "Shift id, goto state 4",
+    "action": "Shift id, goto state 2",
     "type": "shift",
-    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 4.",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 2.",
     "shifted": "id"
   },
   {
     "stack": [
       0,
-      1
+      4
     ],
     "remaining_input": [
       "+",
@@ -41,7 +41,7 @@
   {
     "stack": [
       0,
-      5
+      3
     ],
     "remaining_input": [
       "+",
@@ -62,7 +62,7 @@
   {
     "stack": [
       0,
-      3
+      5
     ],
     "remaining_input": [
       "+",
@@ -83,8 +83,8 @@
   {
     "stack": [
       0,
-      3,
-      11
+      5,
+      12
     ],
     "remaining_input": [
       "+",
@@ -93,17 +93,17 @@
       "id",
       "$"
     ],
-    "action": "Shift +, goto state 11",
+    "action": "Shift +, goto state 12",
     "type": "shift",
-    "explain": "Empujar terminal \u00ab+\u00bb y pasar al estado 11.",
+    "explain": "Empujar terminal \u00ab+\u00bb y pasar al estado 12.",
     "shifted": "+"
   },
   {
     "stack": [
       0,
-      3,
-      11,
-      4
+      5,
+      12,
+      2
     ],
     "remaining_input": [
       "id",
@@ -111,17 +111,17 @@
       "id",
       "$"
     ],
-    "action": "Shift id, goto state 4",
+    "action": "Shift id, goto state 2",
     "type": "shift",
-    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 4.",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 2.",
     "shifted": "id"
   },
   {
     "stack": [
       0,
-      3,
-      11,
-      1
+      5,
+      12,
+      4
     ],
     "remaining_input": [
       "*",
@@ -140,9 +140,9 @@
   {
     "stack": [
       0,
-      3,
-      11,
-      17
+      5,
+      12,
+      18
     ],
     "remaining_input": [
       "*",
@@ -161,47 +161,47 @@
   {
     "stack": [
       0,
-      3,
-      11,
-      17,
-      12
+      5,
+      12,
+      18,
+      11
     ],
     "remaining_input": [
       "*",
       "id",
       "$"
     ],
-    "action": "Shift *, goto state 12",
+    "action": "Shift *, goto state 11",
     "type": "shift",
-    "explain": "Empujar terminal \u00ab*\u00bb y pasar al estado 12.",
+    "explain": "Empujar terminal \u00ab*\u00bb y pasar al estado 11.",
     "shifted": "*"
   },
   {
     "stack": [
       0,
-      3,
-      11,
-      17,
+      5,
       12,
-      4
+      18,
+      11,
+      2
     ],
     "remaining_input": [
       "id",
       "$"
     ],
-    "action": "Shift id, goto state 4",
+    "action": "Shift id, goto state 2",
     "type": "shift",
-    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 4.",
+    "explain": "Empujar terminal \u00abid\u00bb y pasar al estado 2.",
     "shifted": "id"
   },
   {
     "stack": [
       0,
-      3,
-      11,
-      17,
+      5,
       12,
-      18
+      18,
+      11,
+      17
     ],
     "remaining_input": [
       "$"
@@ -218,9 +218,9 @@
   {
     "stack": [
       0,
-      3,
-      11,
-      17
+      5,
+      12,
+      18
     ],
     "remaining_input": [
       "$"
@@ -239,7 +239,7 @@
   {
     "stack": [
       0,
-      3
+      5
     ],
     "remaining_input": [
       "$"
@@ -258,7 +258,7 @@
   {
     "stack": [
       0,
-      3
+      5
     ],
     "remaining_input": [
       "$"

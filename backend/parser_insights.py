@@ -11,6 +11,13 @@ import re
 from collections import defaultdict
 
 from dot_export import automaton_to_dot, tree_to_dot
+from nfa_lr import build_lr0_nfa, build_lr1_nfa, nfa_to_dot
+from grammar_common import (
+    load_grammar_from_string as _load_g,
+    process_grammar as _proc_g,
+    clear_first_cache as _clear_first,
+    compute_first as _compute_first,
+)
 
 
 def _last_error_step(trace: list) -> dict | None:
@@ -298,5 +305,47 @@ def enrich_parse_response(parser_id: str, grammar_text: str, input_text: str, pa
 
     tree = payload.get("parse_tree") or payload.get("derivation_tree")
     payload["dot_tree"] = tree_to_dot(tree)
+
+    # AFN de ítems LR(0)/LR(1) — solo para bottom-up. Cada ítem es un nodo;
+    # las ε-aristas son el closure (la subset-construction de esto = el DFA).
+    payload["dot_nfa"] = None
+    payload["nfa_kind"] = None
+    if family == "lr" and grammar_text:
+        try:
+            _clear_first()
+            g_lines = _load_g(grammar_text)
+            g_dict, g_rules = _proc_g(g_lines)
+            nts_list = list(g_dict.keys())
+            if nts_list:
+                start_sym = nts_list[0]
+                for nt in nts_list:
+                    _compute_first(nt, g_dict)
+                if parser_id in ("lr1", "lalr1"):
+                    nfa_items, nfa_trans, nfa_accept = build_lr1_nfa(g_dict, start_sym)
+                    payload["nfa_kind"] = "LR(1)"
+                else:
+                    nfa_items, nfa_trans, nfa_accept = build_lr0_nfa(g_dict, start_sym)
+                    payload["nfa_kind"] = "LR(0)"
+                payload["dot_nfa"] = nfa_to_dot(nfa_items, nfa_trans, nfa_accept)
+        except Exception:
+            # No rompemos el endpoint si la gramática es malformada.
+            payload["dot_nfa"] = None
+            payload["nfa_kind"] = None
+
+    # Pertenencia a la clase del parser — informa al usuario si la gramática
+    # cabe limpiamente en LR(0)/SLR(1)/LALR(1)/LR(1)/LL(1) según conflictos de tabla.
+    conflicts = payload.get("conflicts") or []
+    n_conf = len(conflicts)
+    in_class = n_conf == 0
+    if in_class:
+        reason = f"Sin conflictos en la construcción de tablas — la gramática es {label}."
+    else:
+        reason = (
+            f"La gramática NO es {label}: hay {n_conf} conflicto(s) de tabla. "
+            "Las acciones ambiguas se resuelven con preferencia (no garantiza corrección)."
+        )
+    payload["in_class"] = in_class
+    payload["in_class_reason"] = reason
+    payload["in_class_label"] = label
 
     return payload

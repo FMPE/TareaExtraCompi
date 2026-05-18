@@ -2,7 +2,7 @@
   {
     "stack": [
       0,
-      3
+      1
     ],
     "remaining_input": [
       "a",
@@ -10,9 +10,9 @@
       "x",
       "$"
     ],
-    "action": "Shift a, goto state 3",
+    "action": "Shift a, goto state 1",
     "type": "shift",
-    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 1.",
     "shifted": "a"
   },
   {
@@ -38,29 +38,29 @@
     "stack": [
       0,
       2,
-      5
+      4
     ],
     "remaining_input": [
       "b",
       "x",
       "$"
     ],
-    "action": "Shift b, goto state 5",
+    "action": "Shift b, goto state 4",
     "type": "shift",
-    "explain": "Empujar terminal \u00abb\u00bb y pasar al estado 5.",
+    "explain": "Empujar terminal \u00abb\u00bb y pasar al estado 4.",
     "shifted": "b"
   },
   {
     "stack": [
       0,
       2,
-      5
+      4
     ],
     "remaining_input": [
       "x",
       "$"
     ],
-    "action": "Error: no action for state 5 with token x",
+    "action": "Error: no action for state 4 with token x",
     "type": "error",
     "explain": "No hay entrada en ACTION para este estado y lookahead."
   }

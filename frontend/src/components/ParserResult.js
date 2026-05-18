@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Accordion, Table, Badge, Row, Col } from 'react-bootstrap';
+import { Accordion, Table, Badge, Row, Col, Card } from 'react-bootstrap';
 import AutomatonViewer from './AutomatonViewer';
 import TraceStepper from './TraceStepper';
 import LRMatrixTables from './LRMatrixTables';
@@ -304,17 +304,39 @@ const ParserResult = ({ result }) => {
         </div>
       </div>
 
-      {result.valid ? (
-        <div className="alert alert-success fade-in d-flex align-items-center gap-2" role="alert">
-          <span aria-hidden="true">✓</span>
-          <span><strong>Entrada aceptada</strong> · la cadena pertenece al lenguaje.</span>
-        </div>
-      ) : (
-        <div className="alert alert-danger fade-in d-flex align-items-center gap-2" role="alert">
-          <span aria-hidden="true">✗</span>
-          <span><strong>Entrada rechazada</strong> · revisa el asistente para detalles.</span>
-        </div>
-      )}
+      <div className="parser-result-verdicts">
+        {result.valid ? (
+          <div className="alert alert-success fade-in d-flex align-items-center gap-2 mb-2" role="alert">
+            <span aria-hidden="true">✓</span>
+            <span><strong>Entrada aceptada</strong> · la cadena pertenece al lenguaje.</span>
+          </div>
+        ) : (
+          <div className="alert alert-danger fade-in d-flex align-items-center gap-2 mb-2" role="alert">
+            <span aria-hidden="true">✗</span>
+            <span><strong>Entrada rechazada</strong> · revisa el asistente para detalles.</span>
+          </div>
+        )}
+
+        {typeof result.in_class === 'boolean' && (
+          <div
+            className={`alert ${result.in_class ? 'alert-success' : 'alert-warning'} fade-in d-flex align-items-start gap-2`}
+            role="alert"
+          >
+            <span aria-hidden="true">{result.in_class ? '✓' : '⚠'}</span>
+            <span>
+              <strong>
+                Gramática {result.in_class ? 'es' : 'NO es'}{' '}
+                {result.in_class_label || label}
+              </strong>
+              {result.in_class_reason && (
+                <span className="ms-2 small d-block d-md-inline opacity-75">
+                  · {result.in_class_reason}
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+      </div>
 
       <IntelligentAssistantPanel assistant={result.intelligent_assistant} />
 
@@ -328,12 +350,33 @@ const ParserResult = ({ result }) => {
           />
         </Col>
         <Col lg={6}>
-          <SyntaxTreeView
-            title={treeTitles.deriv}
-            node={treePrimary}
-            subtitle={treeTitles.derivSub}
-            dot={result.dot_tree}
-          />
+          {family === 'lr' ? (
+            <Card className="dfa-inline-card h-100">
+              <Card.Header>
+                <h6 className="mb-1">
+                  AFN de ítems {result.nfa_kind || result.in_class_label || label}
+                </h6>
+                <small className="text-muted">
+                  Cada nodo es un ítem; las ε-aristas (punteadas) son el closure.
+                  La subset-construction sobre esto produce el DFA del accordion.
+                </small>
+              </Card.Header>
+              <Card.Body className="p-2">
+                <AutomatonViewer
+                  dot={result.dot_nfa}
+                  title={`AFN ${result.nfa_kind || ''}`}
+                  minHeight={360}
+                />
+              </Card.Body>
+            </Card>
+          ) : (
+            <SyntaxTreeView
+              title={treeTitles.deriv}
+              node={treePrimary}
+              subtitle={treeTitles.derivSub}
+              dot={result.dot_tree}
+            />
+          )}
         </Col>
       </Row>
       {result.dot_tree && (

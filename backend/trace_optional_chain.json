@@ -2,73 +2,73 @@
   {
     "stack": [
       0,
-      2
+      1
     ],
     "remaining_input": [
       "d",
       "d",
       "$"
     ],
-    "action": "Shift d, goto state 2",
+    "action": "Shift d, goto state 1",
     "type": "shift",
-    "explain": "Empujar terminal \u00abd\u00bb y pasar al estado 2.",
+    "explain": "Empujar terminal \u00abd\u00bb y pasar al estado 1.",
     "shifted": "d"
+  },
+  {
+    "stack": [
+      0,
+      2
+    ],
+    "remaining_input": [
+      "d",
+      "$"
+    ],
+    "action": "Reduce by rule 2: C -> d",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "C",
+    "rule_rhs": [
+      "d"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abC\u00bb con 1 hijo(s)."
+  },
+  {
+    "stack": [
+      0,
+      2,
+      6
+    ],
+    "remaining_input": [
+      "d",
+      "$"
+    ],
+    "action": "Shift d, goto state 6",
+    "type": "shift",
+    "explain": "Empujar terminal \u00abd\u00bb y pasar al estado 6.",
+    "shifted": "d"
+  },
+  {
+    "stack": [
+      0,
+      2,
+      5
+    ],
+    "remaining_input": [
+      "$"
+    ],
+    "action": "Reduce by rule 2: C -> d",
+    "type": "reduce",
+    "rule_num": 2,
+    "rule_lhs": "C",
+    "rule_rhs": [
+      "d"
+    ],
+    "explain": "Reducir con la regla 2: construir nodo \u00abC\u00bb con 1 hijo(s)."
   },
   {
     "stack": [
       0,
       3
-    ],
-    "remaining_input": [
-      "d",
-      "$"
-    ],
-    "action": "Reduce by rule 2: C -> d",
-    "type": "reduce",
-    "rule_num": 2,
-    "rule_lhs": "C",
-    "rule_rhs": [
-      "d"
-    ],
-    "explain": "Reducir con la regla 2: construir nodo \u00abC\u00bb con 1 hijo(s)."
-  },
-  {
-    "stack": [
-      0,
-      3,
-      5
-    ],
-    "remaining_input": [
-      "d",
-      "$"
-    ],
-    "action": "Shift d, goto state 5",
-    "type": "shift",
-    "explain": "Empujar terminal \u00abd\u00bb y pasar al estado 5.",
-    "shifted": "d"
-  },
-  {
-    "stack": [
-      0,
-      3,
-      6
-    ],
-    "remaining_input": [
-      "$"
-    ],
-    "action": "Reduce by rule 2: C -> d",
-    "type": "reduce",
-    "rule_num": 2,
-    "rule_lhs": "C",
-    "rule_rhs": [
-      "d"
-    ],
-    "explain": "Reducir con la regla 2: construir nodo \u00abC\u00bb con 1 hijo(s)."
-  },
-  {
-    "stack": [
-      0,
-      1
     ],
     "remaining_input": [
       "$"
@@ -86,7 +86,7 @@
   {
     "stack": [
       0,
-      1
+      3
     ],
     "remaining_input": [
       "$"

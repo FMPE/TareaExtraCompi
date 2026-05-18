@@ -2,7 +2,7 @@
   {
     "stack": [
       0,
-      2
+      4
     ],
     "remaining_input": [
       "$"
@@ -19,7 +19,7 @@
   {
     "stack": [
       0,
-      3
+      2
     ],
     "remaining_input": [
       "$"

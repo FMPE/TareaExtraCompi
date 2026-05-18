@@ -2,7 +2,7 @@
   {
     "stack": [
       0,
-      2
+      1
     ],
     "remaining_input": [
       "b",
@@ -20,23 +20,23 @@
   {
     "stack": [
       0,
-      2,
-      5
+      1,
+      4
     ],
     "remaining_input": [
       "b",
       "$"
     ],
-    "action": "Shift b, goto state 5",
+    "action": "Shift b, goto state 4",
     "type": "shift",
-    "explain": "Empujar terminal \u00abb\u00bb y pasar al estado 5.",
+    "explain": "Empujar terminal \u00abb\u00bb y pasar al estado 4.",
     "shifted": "b"
   },
   {
     "stack": [
       0,
-      2,
-      4
+      1,
+      5
     ],
     "remaining_input": [
       "$"
@@ -53,7 +53,7 @@
   {
     "stack": [
       0,
-      1
+      2
     ],
     "remaining_input": [
       "$"
@@ -71,7 +71,7 @@
   {
     "stack": [
       0,
-      1
+      2
     ],
     "remaining_input": [
       "$"

@@ -2,7 +2,7 @@
   {
     "stack": [
       0,
-      3
+      2
     ],
     "remaining_input": [
       "a",
@@ -10,49 +10,49 @@
       "a",
       "$"
     ],
-    "action": "Shift a, goto state 3",
+    "action": "Shift a, goto state 2",
     "type": "shift",
-    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 2.",
     "shifted": "a"
   },
   {
     "stack": [
       0,
-      3,
-      3
+      2,
+      2
     ],
     "remaining_input": [
       "a",
       "a",
       "$"
     ],
-    "action": "Shift a, goto state 3",
+    "action": "Shift a, goto state 2",
     "type": "shift",
-    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 2.",
     "shifted": "a"
   },
   {
     "stack": [
       0,
-      3,
-      3,
-      3
+      2,
+      2,
+      2
     ],
     "remaining_input": [
       "a",
       "$"
     ],
-    "action": "Shift a, goto state 3",
+    "action": "Shift a, goto state 2",
     "type": "shift",
-    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 3.",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 2.",
     "shifted": "a"
   },
   {
     "stack": [
       0,
-      3,
-      3,
-      3,
+      2,
+      2,
+      2,
       5
     ],
     "remaining_input": [
@@ -70,8 +70,8 @@
   {
     "stack": [
       0,
-      3,
-      3,
+      2,
+      2,
       5
     ],
     "remaining_input": [
@@ -90,7 +90,7 @@
   {
     "stack": [
       0,
-      3,
+      2,
       5
     ],
     "remaining_input": [
@@ -109,7 +109,7 @@
   {
     "stack": [
       0,
-      2
+      4
     ],
     "remaining_input": [
       "$"

@@ -17,7 +17,7 @@
   {
     "stack": [
       0,
-      3
+      2
     ],
     "remaining_input": [
       "a",
@@ -35,16 +35,16 @@
   {
     "stack": [
       0,
-      3,
-      6
+      2,
+      5
     ],
     "remaining_input": [
       "a",
       "$"
     ],
-    "action": "Shift a, goto state 6",
+    "action": "Shift a, goto state 5",
     "type": "shift",
-    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 6.",
+    "explain": "Empujar terminal \u00aba\u00bb y pasar al estado 5.",
     "shifted": "a"
   },
   {
